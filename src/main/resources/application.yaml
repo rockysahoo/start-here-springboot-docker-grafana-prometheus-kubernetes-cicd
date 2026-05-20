@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: peer-prog
+
+# This is the server configuration. We set the port to 8081, but this can be changed if needed.
+# The default is 8080, but we want to avoid conflicts with other services that might be running on the same port.
+server:
+  port: 8081
+
+# This is for actuator endpoints, which are used for health checks and metrics. We want to expose all of them for now, but we can restrict this later if needed.
+# By default, only a few endpoints are exposed, so we need to explicitly include all of them. This is useful for monitoring and debugging purposes.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    # This is the base path for all actuator endpoints. By default, it's "/actuator", but we can change it if we want to have a different structure for our API.
+    # For example, we could set it to "/monitoring" if we want to have
+    # all monitoring-related endpoints under a common path. For now, we'll keep it as "/actuator".
+    base-path: /actuator
+    prometheus:
+      enabled: true
