@@ -10,7 +10,6 @@
 - The real data has been stored inside the MyConstant class.
 
 ### GET Endpoint
-
 - http://localhost:8081/app/v1/get-name
 
 ~~~ curl
@@ -171,6 +170,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ~~~ bash
 docker build -t peer-study:0.0.1-dev .
+docker build --progress=plain --no-cache -t peer-study:0.0.1-dev .
 ~~~
 
 - Once added the `docker build` command, it will look up the `Dockerfile` and read the instructions from the Dockerfile, build the image according to those instructions.
@@ -205,7 +205,7 @@ version = "0.0.1-dev"
 ~~~ bash
 docker run -p <port-outside-container>:<port-inside-container> <image-name>:<tag>
 docker run -p 8082:8081 peer-study:0.0.1-dev
-docker run -p 8082:8081 -d  peer-study:0.0.1-dev  -> `-d` flag is used to run the container in detached mode, which means that the container will run in the background.
+docker run -p 8082:8081 -d peer-study:0.0.1-dev  -> `-d` flag is used to run the container in detached mode, which means that the container will run in the background.
 ~~~
 
 - Looks this port command carefully, the first port number (8082) is the port on the host machine that you want to map to the second port number (8081), which is the port that the application is running on inside the container.
@@ -271,20 +271,21 @@ docker run -p 8083:8081 yourusername/peer-study:0.0.1-dev
 ~~~
 
 - This command runs a container from the pulled image and maps port 8083 of the container to port 8081 on the host machine, allowing you to access the application at `http://localhost:8083`.
-- In summary, to add a Dockerfile, build an image, run a container, push to Docker Hub, pull from Docker Hub, and run a container from Docker Hub, you need to create a Dockerfile with the necessary instructions, build the image using `docker build`, 
-  run the container using `docker run`, tag and push the image to Docker Hub using `docker tag` and `docker push`, pull the image using `docker pull`, and run a container from the pulled image using `docker run`. This process allows you to containerize your application and share it easily through Docker Hub.
+- In summary, to add a Dockerfile, build an image, run a container, push to Docker Hub, pull from Docker Hub, and run a container from Docker Hub, you need to create a Dockerfile with the necessary instructions, 
+  build the image using `docker build`, run the container using `docker run`, tag and push the image to Docker Hub using `docker tag` and `docker push`, pull the image using `docker pull`, and run a container from the pulled image using `docker run`. 
+- This process allows you to containerize your application and share it easily through Docker Hub.
 - Overall, using Docker allows you to create a consistent and portable environment for your application, making it easier to deploy and manage across different environments and platforms.
 
 ### Docker Compose : Build the app with docker-compose.yaml file : add database to application : database as the docker image (Postgres) : app container talks to postgres container.
 
 ---
 
-- In addition to the basic Docker commands, you can also use Docker Compose to manage multi-container applications, allowing you to define and run multiple containers with a single command. This is particularly useful when your application has dependencies on other services, such as databases or message brokers, 
-  that need to be run alongside your application container.
+- In addition to the basic Docker commands, you can also use Docker Compose to manage multi-container applications, allowing you to define and run multiple containers with a single command. This is particularly useful when your application has 
+  dependencies on other services, such as databases or message brokers, that need to be run alongside your application container.
 - To use Docker Compose, you need to create a `docker-compose.yml` file that defines the services and their configurations. For example, if your Spring Boot application depends on a PostgreSQL database, your `docker-compose.yml` file might look like this:
-- The file name should be `docker-compose.yml` and it should be located in the root directory of your project, where your Dockerfile is also located.
-- You can add the custom file name for the docker compose file, but the default name is `docker-compose.yml` and it is recommended to use the default name for better readability and convention.
-- Remember adding the custom file name `peer-study-docker-compose.yml` for the docker compose file, you need to specify the file name while running the docker compose command, for example:  Look the line number 238.
+- The filename should be `docker-compose.yml` and it should be located in the root directory of your project, where your Dockerfile is also located.
+- You can add the custom filename for the docker compose file, but the default name is `docker-compose.yml` and it is recommended to use the default name for better readability and convention.
+- Remember adding the custom filename `peer-study-docker-compose.yml` for the docker compose file, you need to specify the filename while running the docker compose command, for example:  Look the line number 238.
 
 ~~~ yaml
 version: '3'
@@ -306,7 +307,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: peer_study_db
     ports:
-      - "5432:5432"
+      - "5432:5432" # Map port 5432(outside the container) on the host to port 5432(inside the container) in the container
 ~~~
 
 - In this example, we have defined two services: `app`, which runs the Spring Boot application, and `db`, which runs a PostgreSQL database. The `app` service depends on the `db` service, ensuring that the database is started before the application. 
@@ -323,10 +324,46 @@ docker-compose up
 docker-compose -f peer-study-docker-compose.yml up
 ~~~
 
-- This command will start both the application and the database containers, allowing you to access the application at `http://localhost:8082` and the database at `localhost:5432`. Using Docker Compose simplifies the management of multi-container applications and allows you to easily scale and orchestrate your services as needed. It also provides features such as environment variable management, volume mounting, and network configuration,
-- making it a powerful tool for developing and deploying complex applications with multiple dependencies. Overall, Docker Compose is an essential tool for managing multi-container applications and can greatly simplify the development and deployment process.
-- In summary, using Docker and Docker Compose allows you to create a consistent and portable environment for your application, making it easier to deploy and manage across different environments and platforms. By containerizing your application and its dependencies, you can ensure that it runs consistently regardless of the underlying infrastructure, making it easier to develop, test, and deploy your application with confidence.
-- In addition to the basic Docker commands and Docker Compose, you can also use Docker Swarm or Kubernetes for orchestrating and managing your containerized applications at scale. These tools provide features such as load balancing, service discovery, and automatic scaling, allowing you to manage complex applications with ease. By leveraging these orchestration tools, you can ensure high availability and reliability for your applications while simplifying the deployment and management process. Overall, using Docker and its associated tools provides a powerful and flexible way to develop, deploy, and manage your applications in a modern cloud-native environment.
-- In conclusion, Docker and its ecosystem of tools offer a comprehensive solution for containerizing, deploying, and managing applications. Whether you're using basic Docker commands, Docker Compose for multi-container applications, or orchestration tools like Docker Swarm or Kubernetes, you can create a consistent and portable environment for your applications, making it easier to develop, test, and deploy with confidence. By embracing containerization and orchestration, you can ensure that your applications are scalable, reliable, and easy to manage in today's dynamic cloud-native landscape.
-- Overall, Docker and its associated tools provide a powerful and flexible way to develop, deploy, and manage your applications in a modern cloud-native environment. By leveraging these tools effectively, you can streamline your development workflow, improve application performance, and ensure that your applications are resilient and scalable in production. Whether you're a small startup or a large enterprise, Docker can help you achieve your goals and accelerate your software delivery process.
+- This command will start both the application and the database containers, allowing you to access the application at `http://localhost:8082` and the database at `localhost:5432`. 
+- Using Docker Compose simplifies the management of multi-container applications and allows you to **easily scale and orchestrate your services** as needed. It also provides features such as environment variable management, volume mounting, and network configuration,
+- Making it a powerful tool for developing and deploying complex applications with multiple dependencies. Overall, Docker Compose is an essential tool for managing multi-container applications and can greatly simplify the development and deployment process.
+- Using Docker and Docker Compose allows you to create a consistent and portable environment for your application, making it easier to deploy and manage across different environments and platforms. 
+- By containerizing your application and its dependencies, you can ensure that it runs consistently regardless of the underlying infrastructure, making it easier to develop, test, and deploy your application with confidence.
+- In addition to the basic Docker commands and Docker Compose, you can also use `Docker Swarm or Kubernetes` for **orchestrating and managing your containerized applications at scale**. 
+- These tools provide features such as **load balancing**, **service discovery**, and **automatic scaling**, allowing you to manage complex applications with ease. 
+- By leveraging these orchestration tools, you can ensure high availability and reliability for your applications while simplifying the deployment and management process. 
+- Overall, using Docker and its associated tools provides a powerful and flexible way to develop, deploy, and manage your applications in a modern cloud-native environment.
+- Docker and its ecosystem of tools offers a comprehensive solution for containerizing, deploying, and managing applications. 
+- Whether you're using basic Docker commands, Docker Compose for multi-container applications, or orchestration tools like Docker Swarm or Kubernetes, you can create a consistent and portable environment for your applications, making it easier to develop, test, and deploy with confidence. 
+- By embracing containerization and orchestration, you can ensure that your applications are scalable, reliable, and easy to manage in today's dynamic cloud-native landscape.
+
+
+### Databse configuration in APP : Fetch Data source details from External System OR Pass as Environment Variables Arguments
+
+---
+
+- In a Spring Boot application, you can configure the database connection details in the `application.properties` or `application.yaml` file. However, for better security and flexibility.
+- it is recommended to fetch these details from an external system(`config-server`, `flux`) or pass them as environment variables.
+- To fetch database connection details from an external system, you can use a configuration management tool like Spring Cloud Config or HashiCorp Vault. 
+- These tools allow you to securely store and manage your configuration properties, including database credentials, and provide them to your application at runtime.
+- Alternatively, you can pass the database connection details as environment variables when running your application. 
+- This approach is particularly useful when deploying your application in a containerized environment like Docker, where you can easily set environment variables for your containers.
+- To pass database connection details as environment variables, you can set the following environment variables in your Docker Compose file or when running the Docker container:
+
+docker-compose.yml file:
+~~~ yaml
+services:
+  app:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/peer_study_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+~~~ 
+
+- When running the Docker container:
+
+~~~ bash
+docker run -p 8081:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_study_db -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=password peer-study-app
+docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_study_db -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=password yourusername/peer-study:0.0.1-dev
+~~~
 
