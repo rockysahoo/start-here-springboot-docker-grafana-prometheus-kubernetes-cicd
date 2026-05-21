@@ -5,11 +5,12 @@ spring:
 # This is the configuration for the datasource. We are using PostgreSQL as our database, and we need to provide the connection details such as URL, username, password, and driver class name.
 # Note that in a real application, we would typically use environment variables or a secure vault to store sensitive information like database credentials, rather than hardcoding them in the configuration file.
 # Create postres database with name "mylocaldb" and user "mylocaldb" with password "mylocaldb" before running the application Otherwise COMMENT OUT the datasource configuration below to avoid connection errors.
-  datasource:
-      url: jdbc:postgresql://localhost:5432/mylocaldb
-      username: mylocaldb
-      password: mylocaldb
-      driver-class-name: org.postgresql.Driver
+
+#  datasource:
+#      url: jdbc:postgresql://localhost:5432/mylocaldb
+#      username: mylocaldb
+#      password: mylocaldb
+#      driver-class-name: org.postgresql.Driver
 
 # This is the server configuration. We set the port to 8081, but this can be changed if needed.
 # The default is 8080, but we want to avoid conflicts with other services that might be running on the same port.

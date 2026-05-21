@@ -5,9 +5,12 @@
 
 ---
 
-> MyFirstController → MyFirstService → MyFirstRepository(Not Used Yet) → Database(Not Used Yet)
+> - MyFirstController → MyFirstService → MyConstant(Insert and Fetch Data) - No Database Use Here.
+> - MyDataController → MyDataService → MyDataRepository → Database(Insert and Fetch Data).
 
-- The real data has been stored inside the MyConstant class.
+- The real data has been stored inside the MyConstant class for the simplicity of the application, but in real world application, we will be using a database to store the data and fetch it from the database.
+- The MyDataController is responsible for handling the HTTP requests related to data operations, such as fetching data from the database or inserting data into the database. 
+- It interacts with the MyDataService, which contains the business logic for data manipulation, and the MyDataRepository, which is responsible for interacting with the database to perform CRUD operations.
 
 #### GET : Endpoint
 - http://localhost:8081/app/v1/get-name
