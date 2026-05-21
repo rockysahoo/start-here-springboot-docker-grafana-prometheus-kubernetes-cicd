@@ -9,7 +9,7 @@
 
 - The real data has been stored inside the MyConstant class.
 
-### GET Endpoint
+#### GET : Endpoint
 - http://localhost:8081/app/v1/get-name
 
 ~~~ curl
@@ -25,10 +25,9 @@ curl --location 'localhost:8081/app/v1/get-name'
   "message": "Names retrieved successfully"
 }
 ~~~
-
 ![img_1.png](images/img_1.png)
 
-### POST Endpoint
+#### POST : Endpoint
 - http://localhost:8081/app/v1/add-name
 - Body:
 
@@ -45,7 +44,6 @@ curl --location 'http://localhost:8081/app/v1/add-name' \
     "name": "Sima"
 }'
 ~~~
-
 ![img.png](images/img.png)
 
 ### Build and Deploy :
@@ -205,10 +203,13 @@ version = "0.0.1-dev"
 ~~~ bash
 docker run -p <port-outside-container>:<port-inside-container> <image-name>:<tag>
 docker run -p 8082:8081 peer-study:0.0.1-dev
-docker run -p 8082:8081 -d peer-study:0.0.1-dev  -> `-d` flag is used to run the container in detached mode, which means that the container will run in the background.
+# `-d` flag is used to run the container in detached mode, which means that the container will run in the background.
+docker run -p 8082:8081 -d peer-study:0.0.1-dev
+# This command will automatically map the port 8081 of the container to a random available port on the host machine, allowing you to access the application without specifying a specific port.
+docker run -p 8081 -d peer-study:0.0.1-dev
 ~~~
 
-- Looks this port command carefully, the first port number (8082) is the port on the host machine that you want to map to the second port number (8081), which is the port that the application is running on inside the container.
+- Looks this port command carefully, the first port number `(8082)` is the port on the host machine that you want to map to the second port number `(8081)`, which is the port that the application is running on inside the container.
 - This means that when you access `http://localhost:8082` on your host machine, it will be forwarded to port 8081 inside the container where the application is running.
 - `8082` port for outside and `8081` port for inside the container.
 - Local System : `http://localhost:8082` → Go Inside the Container : `http://localhost:8081`.
