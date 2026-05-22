@@ -286,6 +286,23 @@ services:
 >  - Inside the Docker container, the communication between the **application and the database is done using the service name** defined in the `docker-compose` file. In this case, the application can connect to the database using the hostname `db`, 
 >    which is the name of the database service defined in the Docker Compose file. This allows the application to communicate with the database container without needing to know its IP address, as Docker Compose handles the networking between the containers.
 
+> Extra Notes:
+> - Docker containers can have different IPs depending on how they're configured and the network settings. When you run a container, Docker assigns it an IP address from a private range. This IP address is used for communication between containers on the same network.
+> - Each container gets a private IP from Docker's internal subnet (usually 172.17.0.0/16), and this IP can change each time you start the container. 
+> -  However, when using Docker Compose, you can refer to other services by their service name (e.g., `db` for the database service) instead of using the IP address, which allows for more stable communication between containers regardless of their assigned IPs.
+> - IPs are assigned dynamically — they change every time a container restarts.
+> - Docker Compose sets up a shared network automatically — services talk to each other by service name:
+
+~~~ yaml
+services:
+  web:
+    image: nginx
+  db:
+    image: postgres
+# "web" can reach "db" via hostname "db"
+~~~
+
+
 - You can then start both services using the following command:
 ~~~ bash
 docker-compose up
