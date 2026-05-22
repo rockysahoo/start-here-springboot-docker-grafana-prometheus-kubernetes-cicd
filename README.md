@@ -157,6 +157,7 @@ pom.xml file:
 	<version>0.0.1-dev</version>
     
     Prefrable : 0.0.1-dev, 0.0.2-dev, 0.0.3-dev and so on for the development versions of the image.
+    TALK THIS PART ON CICD SESSION, HOW TO MANAGE THE VERSIONING OF THE IMAGE IN THE REAL WORLD SCENARIO WITH `GITHUB ACTIONS`.
 ~~~
 
 build.gradle.kts file:
