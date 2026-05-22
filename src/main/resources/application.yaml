@@ -1,6 +1,6 @@
 spring:
   application:
-    name: peer-prog
+    name: peer-study
 
 # This is the configuration for the datasource. We are using PostgreSQL as our database, and we need to provide the connection details such as URL, username, password, and driver class name.
 # Note that in a real application, we would typically use environment variables or a secure vault to store sensitive information like database credentials, rather than hardcoding them in the configuration file.
@@ -11,6 +11,29 @@ spring:
 #      username: mylocaldb
 #      password: mylocaldb
 #      driver-class-name: org.postgresql.Driver
+
+# Uncomment this incase you want to use Testcontainers to spin up a PostgreSQL database for testing purposes. Incase NO local databse configured.
+# The 'tc' prefix tells Testcontainers to spin up the image
+# Adding 'daemon=true' helps ensure it doesn't hang the JVM on exit
+# // - The start of the authority (host) section (which is empty/ignored by the TC driver).
+# / - The separator before the database name.
+
+  datasource:
+    url: jdbc:tc:postgresql:16:///test?daemon=true
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  testcontainers:
+    enabled: false
+    reuse:
+      enable: false
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 # This is the server configuration. We set the port to 8081, but this can be changed if needed.
 # The default is 8080, but we want to avoid conflicts with other services that might be running on the same port.

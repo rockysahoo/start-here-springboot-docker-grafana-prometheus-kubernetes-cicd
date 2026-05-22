@@ -9,45 +9,9 @@
 > - MyDataController → MyDataService → MyDataRepository → Database(Insert and Fetch Data).
 
 - The real data has been stored inside the MyConstant class for the simplicity of the application, but in real world application, we will be using a database to store the data and fetch it from the database.
-- The MyDataController is responsible for handling the HTTP requests related to data operations, such as fetching data from the database or inserting data into the database. 
-- It interacts with the MyDataService, which contains the business logic for data manipulation, and the MyDataRepository, which is responsible for interacting with the database to perform CRUD operations.
-
-#### GET : Endpoint
-- http://localhost:8081/app/v1/get-name
-
-~~~ curl
-curl --location 'localhost:8081/app/v1/get-name'
-~~~
-- Response:
-~~~ json
-{
-  "data": {
-    "808b34b4-23e3-4a09-a1e7-207c194346ad": "Sima",
-    "82548a06-eb93-4671-95a4-e1fa2309667e": "Pratik"
-  },
-  "message": "Names retrieved successfully"
-}
-~~~
-![img_1.png](images/img_1.png)
-
-#### POST : Endpoint
-- http://localhost:8081/app/v1/add-name
-- Body:
-
-~~~ json
-{
-    "name": "Sima"
-}
-~~~
-
-~~~ curl
-curl --location 'http://localhost:8081/app/v1/add-name' \
---header 'Content-Type: application/json' \
---data '{
-    "name": "Sima"
-}'
-~~~
-![img.png](images/img.png)
+- The `MyDataController` is responsible for handling the HTTP requests related to data operations, such as fetching data from the database or inserting data into the database. 
+- It interacts with the `MyDataService`, which contains the business logic for data manipulation, and the `MyDataRepository`, which is responsible for interacting with the database to perform CRUD operations.
+- For SAMPLE Data insert Refer to `/testData` file, which contains the sample data and the endpoints to insert and fetch the data from the database.
 
 ### Build and Deploy :
 
@@ -322,10 +286,16 @@ services:
 >    which is the name of the database service defined in the Docker Compose file. This allows the application to communicate with the database container without needing to know its IP address, as Docker Compose handles the networking between the containers.
 
 - You can then start both services using the following command:
-
 ~~~ bash
 docker-compose up
 docker-compose -f peer-study-docker-compose.yml up
+~~~
+
+- Connect to the Postgres database running in container using the below command:
+- Refer to `application.yaml` file for the database connection details `spring.datasource.url = jdbc:tc:postgresql:16:///test?daemon=true`.
+~~~ bash
+docker exec -it <container_id> psql -U <user_name> -d <database_name>
+docker exec -it c83f2b674491 psql -U test -d test
 ~~~
 
 - This command will start both the application and the database containers, allowing you to access the application at `http://localhost:8082` and the database at `localhost:5432`. 
@@ -342,32 +312,32 @@ docker-compose -f peer-study-docker-compose.yml up
 - By embracing containerization and orchestration, you can ensure that your applications are scalable, reliable, and easy to manage in today's dynamic cloud-native landscape.
 
 
-### Databse configuration in APP : Fetch Data source details from External System OR Pass as Environment Variables Arguments
+### Database configuration in APP : Fetch Data source details from External System OR Pass as Environment Variables Arguments
 
 ---
 
 - In a Spring Boot application, you can configure the database connection details in the `application.properties` or `application.yaml` file. However, for better security and flexibility.
-- it is recommended to fetch these details from an external system(`config-server`, `flux`) or pass them as environment variables.
+- It is recommended to fetch these details from an external system(`config-server`, `flux`) or pass them as environment variables.
 - To fetch database connection details from an external system, you can use a configuration management tool like Spring Cloud Config or HashiCorp Vault. 
 - These tools allow you to securely store and manage your configuration properties, including database credentials, and provide them to your application at runtime.
 - Alternatively, you can pass the database connection details as environment variables when running your application. 
 - This approach is particularly useful when deploying your application in a containerized environment like Docker, where you can easily set environment variables for your containers.
-- To pass database connection details as environment variables, you can set the following environment variables in your Docker Compose file or when running the Docker container:
+- To pass database connection details as environment variables, you can set the following environment variables in your Docker Compose file or when running the Docker container.
 
-docker-compose.yml file:
+application.yml file:
 ~~~ yaml
 services:
   app:
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/peer_study_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/mylocaldb
+      SPRING_DATASOURCE_USERNAME: mylocaldb
+      SPRING_DATASOURCE_PASSWORD: mylocaldb
 ~~~ 
 
 - When running the Docker container:
 
 ~~~ bash
 docker run -p 8081:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_study_db -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=password peer-study-app
-docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_study_db -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=password yourusername/peer-study:0.0.1-dev
+docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/mylocaldb -e SPRING_DATASOURCE_USERNAME=mylocaldb -e SPRING_DATASOURCE_PASSWORD=mylocaldb yourusername/peer-study:0.0.1-dev
 ~~~
 

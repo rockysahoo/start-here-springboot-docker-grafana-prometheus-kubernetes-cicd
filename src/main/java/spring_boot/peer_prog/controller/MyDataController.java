@@ -6,6 +6,7 @@ import spring_boot.peer_prog.dto.Mobile;
 import spring_boot.peer_prog.dto.Product;
 import spring_boot.peer_prog.service.MyDataService;
 
+import java.net.URI;
 import java.util.List;
 
 
@@ -28,8 +29,8 @@ public class MyDataController {
     @GetMapping("/products/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         return myDataService.getProductById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                            .map(ResponseEntity::ok)
+                            .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/products")
@@ -38,14 +39,18 @@ public class MyDataController {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(myDataService.addProduct(product));
+        var productAdded = myDataService.addProduct(product);
+
+        return ResponseEntity
+                .created(URI.create("/app/v2/product/" +  product.id()))
+                .body(productAdded);
     }
 
     @DeleteMapping("/products/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
         boolean removed = myDataService.deleteProduct(id);
         return removed
-                ? ResponseEntity.ok("Product " + id + " deleted")
+                ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }
 
@@ -68,14 +73,18 @@ public class MyDataController {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(myDataService.addMobile(mobile));
+        var mobileAdded  = myDataService.addMobile(mobile);
+
+        return ResponseEntity
+                .created(URI.create("/app/v2/mobile/" +  mobileAdded.id()))
+                .body(mobileAdded);
     }
 
     @DeleteMapping("/mobiles/{id}")
     public ResponseEntity<String> deleteMobile(@PathVariable Long id) {
         boolean removed = myDataService.deleteMobile(id);
         return removed
-                ? ResponseEntity.ok("Mobile " + id + " deleted")
+                ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }
 }
