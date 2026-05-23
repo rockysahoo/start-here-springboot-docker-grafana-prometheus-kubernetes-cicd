@@ -5,27 +5,21 @@ spring:
 # This is the configuration for the datasource. We are using PostgreSQL as our database, and we need to provide the connection details such as URL, username, password, and driver class name.
 # Note that in a real application, we would typically use environment variables or a secure vault to store sensitive information like database credentials, rather than hardcoding them in the configuration file.
 # Create postres database with name "mylocaldb" and user "mylocaldb" with password "mylocaldb" before running the application Otherwise COMMENT OUT the datasource configuration below to avoid connection errors.
+# Incase no Local PostgreSQL database is available, Comment this datasource and removed the dependency for PostgreSQL driver in the pom.xml file to avoid connection errors.
 
 #  datasource:
-#      url: jdbc:postgresql://localhost:5432/mylocaldb
-#      username: mylocaldb
-#      password: mylocaldb
-#      driver-class-name: org.postgresql.Driver
+#    url: jdbc:postgresql://localhost:5432/mylocaldb
+#    username: mylocaldb
+#    password: mylocaldb
+#    driver-class-name: org.postgresql.Driver
 
-# Uncomment this incase you want to use Testcontainers to spin up a PostgreSQL database for testing purposes. Incase NO local databse configured.
-# The 'tc' prefix tells Testcontainers to spin up the image
-# Adding 'daemon=true' helps ensure it doesn't hang the JVM on exit
-# // - The start of the authority (host) section (which is empty/ignored by the TC driver).
-# / - The separator before the database name.
-
+# For Docker Compose when appliction runnning inside the container, look up the database connection details from environment variables and use them to configure the datasource.
+# This allows the application to connect to the PostgreSQL database running in the "db" service defined in the docker-compose.yml file without hardcoding the connection details in the configuration file. Make sure to set the environment variables SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, and SPRING_DATASOURCE_PASSWORD in the docker-compose.yml file as shown in the example above.
   datasource:
-    url: jdbc:tc:postgresql:16:///test?daemon=true
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-
-  testcontainers:
-    enabled: false
-    reuse:
-      enable: false
+    url: jdbc:postgresql://db:5432/peer_study_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     show-sql: true

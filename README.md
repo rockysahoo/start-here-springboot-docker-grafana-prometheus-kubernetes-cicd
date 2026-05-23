@@ -108,7 +108,7 @@ scrape_configs:
 - In summary, to get metrics with Prometheus in a Spring Boot application, you need to add the `spring-boot-starter-actuator` and `micrometer-registry-prometheus` dependencies, enable the actuator endpoints, and configure Prometheus to scrape the metrics endpoint. This setup allows you to monitor and analyze your application's performance effectively.
 - You can also create custom metrics using Micrometer by defining your own `MeterRegistry` and registering custom metrics with it. This allows you to track specific application metrics that are relevant to your use case, providing deeper insights into the application's behavior and performance.
 
-### Add Dockerfile : Build Image : Run Container : Push to Docker Hub : Pull from Docker Hub : Run Container from Docker Hub
+### Add Dockerfile - Build Image - Run Container - Push to Docker Hub - Pull from Docker Hub - Run Container from Docker Hub
 
 ---
 
@@ -245,17 +245,41 @@ docker run -p 8083:8081 yourusername/peer-study:0.0.1-dev
 - This process allows you to containerize your application and share it easily through Docker Hub.
 - Overall, using Docker allows you to create a consistent and portable environment for your application, making it easier to deploy and manage across different environments and platforms.
 
-### Docker Compose : Build the app with docker-compose.yaml file : add database to application : database as the docker image (Postgres) : app container talks to postgres container.
+### Docker Compose - Build the app with docker-compose.yaml file - add database to application - database as the docker image (Postgres) - app container talks to postgres container.
 
 ---
 
-- In addition to the basic Docker commands, you can also use Docker Compose to manage multi-container applications, allowing you to define and run multiple containers with a single command. This is particularly useful when your application has 
-  dependencies on other services, such as databases or message brokers, that need to be run alongside your application container.
-- To use Docker Compose, you need to create a `docker-compose.yml` file that defines the services and their configurations. For example, if your Spring Boot application depends on a PostgreSQL database, your `docker-compose.yml` file might look like this:
+- In addition to the basic Docker commands, you can also use Docker Compose to manage multi-container applications, allowing you to define and run multiple containers with a single command. 
+- This is particularly useful when your application has dependencies on other services, such as databases or message brokers, that need to be run alongside your application container.
+- To use Docker Compose, you need to create a `docker-compose.yml` file that defines the services and their configurations. 
+- For example, if your Spring Boot application depends on a PostgreSQL database, your `docker-compose.yml` file might look like below file.
 - The filename should be `docker-compose.yml` and it should be located in the root directory of your project, where your Dockerfile is also located.
 - You can add the custom filename for the docker compose file, but the default name is `docker-compose.yml` and it is recommended to use the default name for better readability and convention.
-- Remember adding the custom filename `peer-study-docker-compose.yml` for the docker compose file, you need to specify the filename while running the docker compose command, for example:  Look the line number 238.
+- Remember adding the custom filename `peer-study-docker-compose.yml` for the docker compose file, you need to specify the filename while running the docker compose command.
 
+> IMP NOTE : USE CASE OF DOCKER COMPOSE - WHEN YOUR APPLICATION HAS DEPENDENCIES ON OTHER SERVICES, SUCH AS DATABASES OR MESSAGE BROKERS, THAT NEED TO BE RUN ALONGSIDE YOUR APPLICATION CONTAINER.
+>   - So the application running in your local, and you've already installed the database in your local machine, and configured the data-sources inside the `application.yaml`.
+>   - Once application starts, it will connect to the database running in your local machine and perform the operations.
+>   - But when you run the application in a docker container, it will not be able to connect to the database running in your local machine, because the application is running inside the container and it does not have access to the local machine's network.
+>   - Docker used different networking for the containers, and the application container will not be able to access the database running in your local machine, which is outside the container.
+>   - To solve this issue, you can use Docker Compose to define both the application and the database as services, and configure them to communicate with each other using Docker's networking features. 
+>   - This way, the application container can connect to the database container using the service name defined in the Docker Compose file, allowing them to work together seamlessly.
+>   - In the `docker-compose.yml` file, you can define the application service and the database service, and specify the necessary environment variables for the database connection.
+>   - The application service can then use the service name of the database service to connect to it, allowing the application to interact with the database as if they were running on the same machine.
+>   - This approach allows you to easily manage and orchestrate your application and its dependencies, making it easier to develop, test, and deploy your application in a consistent environment.
+
+- Access database running in container using `localhost` and the port number specified in the `docker-compose.yml` file, which is mapped to the database container's port.
+- For example, if you have mapped port 5432 of the database container to port 5432 on the host machine, `EITHER` you can access the database using `localhost:5432` from your application running in another container or from your local machine.
+- `OR` you can also access the database using docker container name/id.
+~~~ bash
+docker exec -it cc79eba15049 psql -U postgres -d peer_study_db
+
+postgres-# \dt
+Did not find any tables.
+postgres-#
+~~~
+
+docker-compose.yml file:
 ~~~ yaml
 version: '3'
 services:
@@ -301,7 +325,6 @@ services:
     image: postgres
 # "web" can reach "db" via hostname "db"
 ~~~
-
 
 - You can then start both services using the following command:
 ~~~ bash

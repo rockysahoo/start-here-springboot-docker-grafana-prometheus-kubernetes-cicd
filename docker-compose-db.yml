@@ -1,0 +1,11 @@
+version: '3'
+services:
+  db:
+    container_name: db-container #Database postgres container name
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: peer_study_db
+    ports:
+      - "5432:5432" # Map port 5432(outside the container) on the host to port 5432(inside the container) in the container

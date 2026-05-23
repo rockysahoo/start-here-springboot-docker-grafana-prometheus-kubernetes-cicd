@@ -11,4 +11,3 @@ CREATE TABLE IF NOT EXISTS mobiles (
     brand VARCHAR(255),
     model VARCHAR(255)
 );
-

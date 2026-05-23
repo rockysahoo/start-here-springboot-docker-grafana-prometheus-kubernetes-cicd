@@ -1,0 +1,27 @@
+version: '3'
+services:
+  my-app:
+    container_name: my-app-container # Container name for the Spring Boot application
+    # image: yourusername/peer-study:0.0.1-dev
+    # Replace with your actual Docker Hub username and image name, comment 7-10 lines and uncomment this line to pull the image from Docker Hub instead of building it locally.
+    image: peer-study:0.0.1-dev
+    build: # this is the build context: .
+      context: .
+      dockerfile: Dockerfile #pull Dockerfile data from the current directory
+    ports:
+      - "8082:8081" # Map port 8082 on the host to port 8081 in the container
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/peer_study_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      - db
+  db:
+    container_name: db-container #Database postgres container name
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: peer_study_db
+    ports:
+      - "5432:5432" # Map port 5432(outside the container) on the host to port 5432(inside the container) in the container
