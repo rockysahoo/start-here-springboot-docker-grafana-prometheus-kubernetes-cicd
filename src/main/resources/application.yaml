@@ -14,7 +14,8 @@ spring:
 #    driver-class-name: org.postgresql.Driver
 
 # For Docker Compose when appliction runnning inside the container, look up the database connection details from environment variables and use them to configure the datasource.
-# This allows the application to connect to the PostgreSQL database running in the "db" service defined in the docker-compose.yml file without hardcoding the connection details in the configuration file. Make sure to set the environment variables SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, and SPRING_DATASOURCE_PASSWORD in the docker-compose.yml file as shown in the example above.
+# This allows the application to connect to the PostgreSQL database running in the "db" service defined in the docker-compose.yml file without hardcoding the connection details in the configuration file.
+# Make sure to set the environment variables SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, and SPRING_DATASOURCE_PASSWORD in the docker-compose.yml file as shown in the example above.
   datasource:
     url: jdbc:postgresql://db:5432/peer_study_db
     username: postgres
