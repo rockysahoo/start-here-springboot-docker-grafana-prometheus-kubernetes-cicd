@@ -13,14 +13,31 @@ spring:
 #    password: mylocaldb
 #    driver-class-name: org.postgresql.Driver
 
-# For Docker Compose when appliction runnning inside the container, look up the database connection details from environment variables and use them to configure the datasource.
+
+# Comment this b/c application will pick up the database connection details from `docker-compose.yml` file and use them to connect to the PostgreSQL database when running inside the Docker container.
+# These details are optional when running the application locally with a local PostgreSQL database, but they are necessary when running the application inside the Docker container to connect to the PostgreSQL database running in the "db" service defined in the `docker-compose.yml` file.
 # This allows the application to connect to the PostgreSQL database running in the "db" service defined in the docker-compose.yml file without hardcoding the connection details in the configuration file.
 # Make sure to set the environment variables SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, and SPRING_DATASOURCE_PASSWORD in the docker-compose.yml file as shown in the example above.
-  datasource:
-    url: jdbc:postgresql://db:5432/peer_study_db
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
+# Real time application, these details should be stored securely and not hardcoded in the configuration file. Consider using environment variables, a secure vault, or a secrets management tool to store sensitive information like database credentials in a production environment(ConfigServer/Flux Config).
+
+#  datasource:
+#    url: jdbc:postgresql://db:5432/peer_study_db
+#    username: postgres
+#    password: postgres
+#    driver-class-name: org.postgresql.Driver
+
+# Redis configuration. We are using Redis as our caching solution, and we need to provide the connection details such as host, port, and timeout.
+# Similar to the datasource configuration, we can use environment variables to provide these details when running the application locally or inside a Docker container.
+# This allows for flexibility and security in managing connection details without hardcoding them in the configuration file.
+# This is for Lcoal Redis instance (Already defined inside `docker-compose.yml`, make sure to have Redis installed and running on your local machine before running the application.
+# Otherwise, COMMENT OUT the Redis configuration below to avoid connection errors.
+
+#  data:
+#    redis:
+#      host: ${SPRING_DATA_REDIS_HOST:localhost}
+#      port: ${SPRING_DATA_REDIS_PORT:6379}
+#      timeout: 2s
+
 
   jpa:
     show-sql: true
