@@ -1,3 +1,9 @@
+# This is the file used by the real time, b/c you can see we're moving everything to the build stage inside the docker, and build the application inside the docker, and then copy only the jar file to the runtime image, which is a best practice for building docker images for Java applications.
+# This way, we can keep the final image as small as possible and only include the necessary files to run the application.
+
+# But in the basic one, we are copying the jar file from the target directory, which means we have to build the jar file locally before building the docker image, which is not a good practice, because it can lead to issues with dependencies, compatibility and we need to build the project locally everytime to make sure the latest chages are included in the jar file, which can be time consuming and error prone.
+
+
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
 # Use an official OpenJDK runtime as a parent image, check the Image version with the Java version you are using in your application and configure the same in the Dockerfile.
 # This has pulled the OpenJDK 25 image from the Docker Hub (https://hub.docker.com/_/openjdk/tags), which is a lightweight version of the JDK that is suitable for running Java applications in a containerized environment.
