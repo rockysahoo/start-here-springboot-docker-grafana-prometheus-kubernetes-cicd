@@ -52,7 +52,9 @@
 
 ## The Three Service Types
 - Kubernetes has three main Service types and they are not independent options. They build on each other. Each outer type includes all the capabilities of the inner type.
+
 ![img_2.png](../images/img_4.png)
+
 - **ClusterIP** is the foundation. It gives your Service a virtual IP address that is only reachable from inside the cluster.
 - **NodePort** builds on top of ClusterIP by additionally opening a port on every node in the cluster, making the Service reachable from outside.
 - **LoadBalancer** builds on top of NodePort by additionally provisioning a cloud load balancer in front of those node ports, giving you a single stable external IP.
