@@ -1,0 +1,23 @@
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  - job_name: 'my-app-metrics'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # Use the service name (see docker-compose-*.yml) instead of localhost.
+      - targets: ['host.docker.internal:8082'] # 8082 expose to outside ,the port use inside the container with app , ['host.docker.internal:8081']
+        labels:
+          application: 'My Spring Boot Grafana Prom Application'
+
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'docker-metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['host.docker.internal:9323'] # Use the appropriate address for your Docker setup

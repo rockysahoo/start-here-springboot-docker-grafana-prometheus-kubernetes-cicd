@@ -12,19 +12,19 @@ services:
       - "8082:8081" # Map port 8082 on the host to port 8081 in the container
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/peer_study_db
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: testuser
+      SPRING_DATASOURCE_PASSWORD: testpassword
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
     depends_on:
       - db
       - redis
   db:
-    container_name: db-container #Database postgres container name
+    container_name: postgres-db-container #Database postgres container name
     image: postgres:latest
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: testuser           # Set the PostgreSQL username to "testuser"
+      POSTGRES_PASSWORD: testpassword   # Set the PostgreSQL password to "testpassword"
       POSTGRES_DB: peer_study_db
     ports:
       - "5432:5432" # Map port 5432(outside the container) on the host to port 5432(inside the container) in the container

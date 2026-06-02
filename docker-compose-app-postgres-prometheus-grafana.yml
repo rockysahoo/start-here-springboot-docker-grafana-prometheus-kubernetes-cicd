@@ -1,0 +1,48 @@
+version: '3'
+services:
+  # Service_1
+  app:
+    # image: yourusername/peer-study:0.0.1-dev
+    # Replace with your actual Docker Hub username and image name, comment 6-9 lines and uncomment this line to pull the image from Docker Hub instead of building it locally.
+    image: peer-study:0.0.1-dev
+    container_name: my-app-container # Container name for the Spring Boot application
+    build: # this is the build context: .
+      context: .
+      dockerfile: Dockerfile #pull Dockerfile data from the current directory
+    ports:
+      - "8082:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/peer_study_db
+      SPRING_DATASOURCE_USERNAME: testuser
+      SPRING_DATASOURCE_PASSWORD: testpassword
+    depends_on:
+      - db
+  # Service_2
+  db:
+    image: postgres:latest
+    container_name: postgres-db-container #Database postgres container name
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: peer_study_db
+    ports:
+      - "5432:5432"
+  # Service_3
+  grafana:
+    image: grafana/grafana
+    container_name: grafana-container #grafana container name
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+  # Service_4
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus-container #prometheus container name
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml

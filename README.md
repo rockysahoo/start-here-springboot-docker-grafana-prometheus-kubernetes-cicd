@@ -304,11 +304,45 @@ services:
 ~~~
 
 - In this example, we have defined two services: `app`, which runs the Spring Boot application, and `db`, which runs a PostgreSQL database. The `app` service depends on the `db` service, ensuring that the database is started before the application. 
-> VVIP NOTE: 
+> IMP NOTE: 
 >  - The `depends_on` option in Docker Compose does not wait for the database to be fully ready before starting the application. To ensure that the application waits for the database to be ready, you can use a health check in the `db` service and 
 >    configure the `app` service to wait for the database to be healthy before starting. This can be done using the `healthcheck` option in the `db` service and the `depends_on` option with a condition in the `app` service.
 >  - Inside the Docker container, the communication between the **application and the database is done using the service name** defined in the `docker-compose` file. In this case, the application can connect to the database using the hostname `db`, 
 >    which is the name of the database service defined in the Docker Compose file. This allows the application to communicate with the database container without needing to know its IP address, as Docker Compose handles the networking between the containers.
+>  - You can find the App `DNSNames` running inside the container using the command `docker inspect <container_id>`, which will show you the details of the container, including its network settings and DNS names.
+
+~~~ bash
+   docker inspect <container_id> | grep -i DNSNames
+   docker inspect c83f2b674491 | grep -i Aliases
+   
+   
+ "Networks": {
+                "start-here-springboot-docker-grafana-prometheus-kubernetes-cicd_default": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "my-app-container",
+                        "app"
+                    ],
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "e6d553dfe528f28978305c9942d430e5b549d7b0f37f1fb062973640e8e9b9ac",
+                    "EndpointID": "9d5313ff677fe7f4ba15697fb08e5d60476cb4832e4f5e8eedbcf02524561df3",
+                    "Gateway": "172.19.0.1",
+                    "IPAddress": "172.19.0.5",
+                    "MacAddress": "fa:f8:b2:64:6a:42",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": [
+                        "my-app-container",
+                        "app",
+                        "05dadb6ef06e"
+                    ]
+                }
+            }  
+~~~
 
 > Extra Notes:
 > - Docker containers can have different IPs depending on how they're configured and the network settings. When you run a container, Docker assigns it an IP address from a private range. This IP address is used for communication between containers on the same network.
@@ -328,8 +362,8 @@ services:
 
 - You can then start both services using the following command:
 ~~~ bash
-docker-compose up
-docker-compose -f peer-study-docker-compose.yml up
+docker compose up
+docker compose -f peer-study-docker-compose.yml up
 ~~~
 
 - Connect to the Postgres database running in container using the below command:
@@ -381,4 +415,120 @@ services:
 docker run -p 8081:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_study_db -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=password peer-study-app
 docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/mylocaldb -e SPRING_DATASOURCE_USERNAME=mylocaldb -e SPRING_DATASOURCE_PASSWORD=mylocaldb yourusername/peer-study:0.0.1-dev
 ~~~
+
+# Visualization of the app APP : Collect Metrics with Prometheus - Visualize with Grafana - Grafana and Prometheus run as the Docker Containers (Images) - Collects app metrics and docker metrics.
+- To visualize the metrics collected from your Spring Boot application, you can use Grafana, which is a popular open-source platform for monitoring and observability.
+- Grafana allows you to create dashboards and visualizations based on the metrics collected from your application and other sources, providing insights into the performance and health of your application.
+- To set up Grafana and Prometheus as Docker containers, you can use the following `docker-compose-app-postgres-prometheus-grafana.yml` file:
+~~~ yaml
+version: '3'
+services:
+  # Service_1
+  app:
+    # image: yourusername/peer-study:0.0.1-dev
+    # Replace with your actual Docker Hub username and image name, comment 6-9 lines and uncomment this line to pull the image from Docker Hub instead of building it locally.
+    image: peer-study:0.0.1-dev
+    container_name: my-app-container # Container name for the Spring Boot application
+    build: # this is the build context: .
+      context: .
+      dockerfile: Dockerfile #pull Dockerfile data from the current directory
+    ports:
+      - "8082:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/peer_study_db
+      SPRING_DATASOURCE_USERNAME: testuser
+      SPRING_DATASOURCE_PASSWORD: testpassword
+    depends_on:
+      - db
+  # Service_2
+  db:
+    image: postgres:latest
+    container_name: postgres-db-container #Database postgres container name
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: peer_study_db
+    ports:
+      - "5432:5432"
+  # Service_3
+  grafana:
+    image: grafana/grafana
+    container_name: grafana-container #grafana container name
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    depends_on:
+      - prometheus
+  # Service_4
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus-container #prometheus container name
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+~~~
+- In this `docker-compose-app-postgres-prometheus-grafana.yml` file, we have defined four services: `app`, `db`, `prometheus`, and `grafana`.
+- The `app` service runs the Spring Boot application, the `db` service runs a PostgreSQL database, the `prometheus` service runs the Prometheus server, and the `grafana` service runs the Grafana server.
+- The `app` service is configured to connect to the `db` service for database operations, while the `prometheus` service is configured to scrape metrics from the `app` service. 
+- The `grafana` service is set up with default admin credentials(`admin/admin`) and depends on the `prometheus` service to ensure it starts after Prometheus is running.
+- Make sure to create a `prometheus.yml` file in the same directory as your `docker-compose-app-postgres-prometheus-grafana.yml` file with the necessary configuration to scrape metrics from your Spring Boot application. 
+- For example:
+
+prometheus.yml file:
+~~~ yaml
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  - job_name: 'my-app-metrics'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # Use the service name (see docker-compose-*.yml) instead of localhost.
+      - targets: ['host.docker.internal:8082'] # 8082 expose to outside ,the port use inside the container with app , ['host.docker.internal:8081']
+        labels:
+          application: 'My Spring Boot Grafana Prom Application'
+
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'docker-metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['host.docker.internal:9323'] # Use the appropriate address for your Docker setup
+
+~~~
+- `host.docker.internal` is used to allow the Prometheus container to access the application running on the host machine.
+- Instead of the `host.docker.internal`, you can also use the service name defined in the `docker-compose-*.yml` file to access the application from the Prometheus container. 
+- For example, if your application service is named `app`, you can use `app:8081` as the target in the Prometheus configuration.\
+- You can get this inside the `docker inspect <container_id>` command, which will show you the details of the container, including its network settings and `DNS names`.
+- Make sure to replace `host.docker.internal` with the appropriate address if you're running Docker on a different platform (e.g., Linux).
+- The `metrics_path` is set to `/actuator/prometheus`, which is the endpoint exposed by the Spring Boot application for Prometheus metrics.
+- The `targets` section specifies the address and port of the application from which Prometheus will scrape metrics. 
+- In this case, it is set to `host.docker.internal:8082`, which allows Prometheus to access the application running on the host machine at port 8082.
+
+
+- This configuration tells Prometheus to scrape metrics from the Spring Boot application running on `localhost:8081` at regular intervals, allowing you to monitor the application's performance and health over time.
+- You can then use Prometheus's query language (PromQL) to create custom queries and visualizations based on the collected metrics data, helping you gain insights into the application's behavior and performance.
+- Overall, integrating Prometheus with your Spring Boot application **using Micrometer allows you** to effectively monitor and analyze the application's performance and health, enabling you to proactively identify and address any issues that may arise.
+- To get metrics with Prometheus in a Spring Boot application, you need to add the `spring-boot-starter-actuator` and `micrometer-registry-prometheus` dependencies, enable the actuator endpoints, and configure Prometheus to scrape the metrics endpoint. This setup allows you to monitor and analyze your application's performance effectively.
+- You can also create custom metrics using Micrometer by defining your own `MeterRegistry` and registering custom metrics with it. This allows you to track specific application metrics that are relevant to your use case, providing deeper insights into the application's behavior and performance.
+- This file defines three services: `app` for your Spring Boot application, `prometheus` for the Prometheus server, and `grafana` for the Grafana server. 
+- Each service is configured with the necessary environment variables and port mappings to allow them to communicate with each other.
+- Make sure to replace `yourusername/peer-study:0.0.1-dev` with the actual image name and tag of your Spring Boot application.
+- Once you have this `docker-compose-app-postgres-prometheus-grafana.yml` file, you can start all the services using the following command:
+~~~ bash
+docker compose -f docker-compose-app-postgres-prometheus-grafana up -d
+docker compose -f docker-compose-app-postgres-prometheus-grafana down -d
+~~~
+- This command will start the application, Prometheus, and Grafana containers. You can then access Grafana at `http://localhost:3000` and log in with the default credentials (username: `admin`, password: `admin`).
+- Once logged in, you can add Prometheus as a data source in Grafana and create dashboards to visualize the metrics collected from your Spring Boot application.
+- By using Docker Compose to manage your application, Prometheus, and Grafana, you can easily set up a monitoring and visualization stack for your application, allowing you to gain insights into its performance and health in a consistent and portable environment. 
+- This setup allows you to effectively monitor and analyze your application's performance, identify potential issues, and make informed decisions to improve its reliability and scalability.
 

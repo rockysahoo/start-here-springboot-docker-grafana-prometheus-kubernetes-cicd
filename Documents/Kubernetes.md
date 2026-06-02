@@ -27,8 +27,15 @@
     - This type of Service does not allocate a cluster IP. Instead, it returns the IPs of the individual pods directly. 
     - This is useful for stateful applications where you want to connect to specific pods (e.g., databases).
   - 6.ExternalName: 
-    - This type maps a Service to a DNS name. It allows you to access an external service (outside the cluster) using a Kubernetes Service abstraction. 
+    - This type maps a `Service to a DNS name`. It allows you to access an external service (outside the cluster) using a Kubernetes Service abstraction. 
     - The Service will resolve to the specified DNS name when accessed.
+  - 7.Nginx/Ingress: `IMP`
+    - This is a popular Ingress controller that can be used to manage external access to services in a Kubernetes cluster. 
+    - It provides features like `URL routing`, `SSL termination`, and `load balancing`.
+    - This is also called the `reverse proxy pattern`, where the Nginx server acts as a single entry point for all incoming traffic and routes it to the appropriate backend services based on the defined rules.
+    - Here Backend service won't be exposed to the internet directly. It will only be accessible through the Nginx server, which adds an extra layer of security and control over the traffic flow.
+    - You can define Ingress resources to specify how traffic should be routed to your services based on hostnames and paths.
+    
 - Each of these Service types serves a different purpose, and the choice depends on your specific use case and environment. 
 - For internal communication between services, ClusterIP is usually sufficient. For **exposing services to the internet**, `LoadBalancer` or `Ingress` is typically used.
 - In summary, _**Kubernetes Services provide a stable endpoint for accessing a set of pods, abstracting away the dynamic nature of pod IPs**_. The different Service types allow you to control how your services are exposed and accessed, both internally and externally.

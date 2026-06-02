@@ -12,10 +12,10 @@ Session - 1) Build a basic Spring Boot application with some REST Endpoints.
 		- get metrics with prometheous.✅
 
 Session - 2) Add Dockerfile 
-		- Docker Image and Docker Containers.
-		- Build the docker image and run it.
-		- call the endpoints running in docker containers.
-		- push the image to docker-hub with a tag.
+		- Docker Image and Docker Containers.✅
+		- Build the docker image and run it.✅
+		- call the endpoints running in docker containers.✅
+		- push the image to docker-hub with a tag.✅
 
 Session - 3) Docker Compose 
 		- Build the app with docker-compose.yaml file.
