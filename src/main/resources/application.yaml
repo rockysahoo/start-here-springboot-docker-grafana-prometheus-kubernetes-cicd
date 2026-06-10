@@ -6,11 +6,15 @@ spring:
 # Note that in a real application, we would typically use environment variables or a secure vault to store sensitive information like database credentials, rather than hardcoding them in the configuration file.
 # Create postres database with name "mylocaldb" and user "mylocaldb" with password "mylocaldb" before running the application Otherwise COMMENT OUT the datasource configuration below to avoid connection errors.
 # Incase no Local PostgreSQL database is available, Comment this datasource and removed the dependency for PostgreSQL driver in the pom.xml file to avoid connection errors.
+# ${SPRING_DATASOURCE_URL} is an environment variable that can be set in the docker-compose.yml file or in the local environment(.env) when running the application locally, realtime(Test/Production) this values set inside the FLUX config or ConfigServer.
+# If the environment variable is not set, it will default to "jdbc:postgresql://localhost:5432/mylocaldb". Similarly, ${SPRING_DATASOURCE_USERNAME} and ${SPRING_DATASOURCE_PASSWORD}.
+# This allows for flexibility in configuring the database connection details without hardcoding them in the configuration file.
+
 
 #  datasource:
-#    url: jdbc:postgresql://localhost:5432/mylocaldb
-#    username: mylocaldb
-#    password: mylocaldb
+#    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/mylocaldb}
+#    username: ${SPRING_DATASOURCE_USERNAME:mylocaldb}
+#    password: ${SPRING_DATASOURCE_PASSWORD:mylocaldb}
 #    driver-class-name: org.postgresql.Driver
 
 
