@@ -22,10 +22,10 @@
   - 4.Ingress: 
     - This is not a Service type, but rather a separate resource that manages external access to services in a cluster, typically HTTP. 
     - It provides **features** like `URL routing`, `SSL termination`, and `load balancing`. 
-    - Ingress controllers (like Nginx) implement the Ingress resource and route traffic to the appropriate services based on rules defined in the Ingress resource.
+    - Ingress controllers (like Nginx) implement the Ingress resource and route traffic to the appropriate services `based on rules defined` in the Ingress resource.
   - 5.Headless Service: 
     - This type of Service does not allocate a cluster IP. Instead, it returns the IPs of the individual pods directly. 
-    - This is useful for stateful applications where you want to connect to specific pods (e.g., databases).
+    - This is useful for stateful applications where you want to connect to specific pods (e.g., `databases`).
   - 6.ExternalName: 
     - This type maps a `Service to a DNS name`. It allows you to access an external service (outside the cluster) using a Kubernetes Service abstraction. 
     - The Service will resolve to the specified DNS name when accessed.
@@ -39,7 +39,7 @@
 - Each of these Service types serves a different purpose, and the choice depends on your specific use case and environment. 
 - For internal communication between services, ClusterIP is usually sufficient. For **exposing services to the internet**, `LoadBalancer` or `Ingress` is typically used.
 - In summary, _**Kubernetes Services provide a stable endpoint for accessing a set of pods, abstracting away the dynamic nature of pod IPs**_. The different Service types allow you to control how your services are exposed and accessed, both internally and externally.
-- In production environments, it's common to use `ClusterIP` for internal services and `LoadBalancer` or `Ingress` for external access. 
+- In **production environments**, it's common to use `ClusterIP` for internal services and `LoadBalancer` or `Ingress` for external access. 
 - This allows you to `maintain a clean separation between internal and external traffic` while ensuring that your services are resilient to pod restarts and scaling events.
 
 ## How Kubernetes Services Work
