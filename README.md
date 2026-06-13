@@ -114,6 +114,7 @@ scrape_configs:
 
 - A Dockerfile is a text file that contains instructions for building a Docker image. It specifies the base image, the application code, dependencies, and any necessary configurations to create a containerized version of your application.
 - It is just `Blueprint` of Docker image, and it allows you to automate the process of creating a Docker image for your application, making it easier to deploy and run your application in a consistent environment across different platforms.
+- Docker `Container` is a `run time instance of a Docker Image` & It is `isolated environment` where your application runs. It is created from a Docker image and contains everything needed to run the application, including the code, runtime, libraries, and system tools.
 - To create a Dockerfile for your Spring Boot application, you can use the following example as a starting point:
 
 ~~~ dockerfile
