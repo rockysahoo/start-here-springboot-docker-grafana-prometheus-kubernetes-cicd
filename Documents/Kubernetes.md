@@ -35,7 +35,8 @@
     - This is also called the `reverse proxy pattern`, where the Nginx server acts as a single entry point for all incoming traffic and routes it to the appropriate backend services based on the defined rules.
     - Here Backend service won't be exposed to the internet directly. It will only be accessible through the Nginx server, which adds an extra layer of security and control over the traffic flow.
     - You can define Ingress resources to specify how traffic should be routed to your services based on hostnames and paths.
-    
+    ![img.png](img.png)
+
 - Each of these Service types serves a different purpose, and the choice depends on your specific use case and environment. 
 - For internal communication between services, ClusterIP is usually sufficient. For **exposing services to the internet**, `LoadBalancer` or `Ingress` is typically used.
 - In summary, _**Kubernetes Services provide a stable endpoint for accessing a set of pods, abstracting away the dynamic nature of pod IPs**_. The different Service types allow you to control how your services are exposed and accessed, both internally and externally.
