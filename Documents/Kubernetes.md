@@ -30,6 +30,8 @@
     - This type maps a `Service to a DNS name`. It allows you to access an external service (outside the cluster) using a Kubernetes Service abstraction. 
     - The Service will resolve to the specified DNS name when accessed.
   - 7.Nginx/Ingress: `IMP`
+    - Acts as the `single entry point` for traffic entering your `cluster`.
+    - It performs tasks like load balancing, SSL/TLS termination, and traffic filtering before requests hit your microservices.
     - This is a popular Ingress controller that can be used to manage external access to services in a Kubernetes cluster. 
     - It provides features like `URL routing`, `SSL termination`, and `load balancing`.
     - This is also called the `reverse proxy pattern`, where the Nginx server acts as a single entry point for all incoming traffic and routes it to the appropriate backend services based on the defined rules.
