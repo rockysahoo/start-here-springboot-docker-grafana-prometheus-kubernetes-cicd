@@ -51,6 +51,15 @@
 - A Service with `selector: app:dev` routes traffic to only the pods labelled app=dev. A Service with `selector: app:prod` routes traffic to all pods labelled app=prod, which in this case is two pods.
 - `IMP` - A Service load balances across all matching pods automatically. When you scale your Deployment from two to ten pods, the Service starts routing to all ten without any configuration change.
 - When a pod fails its health check and is replaced, the new pod with the same labels is picked up by the Service automatically.
+- Incase you need to do `port-forward` to the service so that can access to application,
+~~~ bash
+kubectl port-forward -n <namespace> svc/service-name service_port_tcp:outside_expose_port
+kubectl port-forward -n developer-portal svc/dtdp-marketplace-api 8080:80
+
+curl http://localhost:8080/health
+~~~
+- Even you can do `port-forward` pod level too, but we need to know the pod name and it is ephemeral, so we need to do it every time when pod is restarted.
+- Service is the best choice b/c service knows about the pods and ips.
 
 ![img.png](../images/img_2.png)
 
