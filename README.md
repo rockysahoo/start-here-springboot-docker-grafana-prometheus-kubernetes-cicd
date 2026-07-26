@@ -417,7 +417,7 @@ docker run -p 8081:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_
 docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/mylocaldb -e SPRING_DATASOURCE_USERNAME=mylocaldb -e SPRING_DATASOURCE_PASSWORD=mylocaldb yourusername/peer-study:0.0.1-dev
 ~~~
 
-# Visualization of the app : Collect Metrics with Prometheus - Visualize with Grafana - Grafana and Prometheus run as the Docker Containers (Images) - Collects app metrics and docker metrics.
+### Visualization of the app : Collect Metrics with Prometheus - Visualize with Grafana - Grafana and Prometheus run as the Docker Containers (Images) - Collects app metrics and docker metrics.
 - To visualize the metrics collected from your Spring Boot application, you can use Grafana, which is a popular open-source platform for monitoring and observability.
 - Grafana allows you to create dashboards and visualizations based on the metrics collected from your application and other sources, providing insights into the performance and health of your application.
 - To set up Grafana and Prometheus as Docker containers, you can use the following `docker-compose-app-postgres-prometheus-grafana.yml` file:
@@ -506,6 +506,12 @@ scrape_configs:
 
 ~~~
 - `host.docker.internal` is used to allow the Prometheus container to access the application running on the host machine.
+
+>> IMP:  
+> 1.`host.docker.internal` IP Address to access the host machine from out-inside/inside the Docker container.   
+> 2.It is a special DNS name that resolves to the internal IP address of the host machine, allowing containers to communicate with services running on the host.  
+> 3.Container can communicate each other with `container_name` or `service_name` defined in the `docker-compose-*.yml` file, but to communicate with the host machine, you can use `host.docker.internal`.
+
 - Instead of the `host.docker.internal`, you can also use the service name defined in the `docker-compose-*.yml` file to access the application from the Prometheus container. 
 - For example, if your application service is named `app`, you can use `app:8081` as the target in the Prometheus configuration.\
 - You can get this inside the `docker inspect <container_id>` command, which will show you the details of the container, including its network settings and `DNS names`.

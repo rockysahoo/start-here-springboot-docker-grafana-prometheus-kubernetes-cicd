@@ -77,3 +77,15 @@ curl http://localhost:8080/health
 - **ClusterIP** is the foundation. It gives your Service a virtual IP address that is only reachable from inside the cluster.
 - **NodePort** builds on top of ClusterIP by additionally opening a port on every node in the cluster, making the Service reachable from outside.
 - **LoadBalancer** builds on top of NodePort by additionally provisioning a cloud load balancer in front of those node ports, giving you a single stable external IP.
+
+## Kubernetes DNS
+- It is hard to remember the IP addresses of services and pods, especially when they can change. 
+- Kubernetes provides a built-in DNS service that automatically assigns DNS names to services and pods, making it easier to access them.
+- Every service has the DNS name and managed by the Kubernetes CoreDNS service.
+- When you `create a Service`, `Kubernetes automatically creates a DNS entry` for it in the **cluster's DNS service**. 
+- The DNS name is based on the Service name and the namespace it is in. 
+- For example, if you create a Service named `my-service` in the namespace `my-namespace`, the DNS name for that Service would be `my-service.my-namespace.svc.cluster.local`.
+- This DNS name can be used to access the Service from other pods within the same cluster.
+~~~ curl
+curl 'http://my-service.my-namespace.svc.cluster.local/v1/endpoint'
+~~~
