@@ -421,6 +421,11 @@ docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:543
 - To visualize the metrics collected from your Spring Boot application, you can use Grafana, which is a popular open-source platform for monitoring and observability.
 - Grafana allows you to create dashboards and visualizations based on the metrics collected from your application and other sources, providing insights into the performance and health of your application.
 - To set up Grafana and Prometheus as Docker containers, you can use the following `docker-compose-app-postgres-prometheus-grafana.yml` file:
+
+![img_8.png](images/img_8.png)
+![img.png](images/img_7.png)
+![Grafana-prometheus.png](images/Grafana-prometheus.png)
+
 ~~~ yaml
 version: '3'
 services:
