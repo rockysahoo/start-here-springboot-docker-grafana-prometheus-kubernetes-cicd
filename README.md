@@ -426,6 +426,11 @@ docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:543
 ![img.png](images/img_7.png)
 ![Grafana-prometheus.png](images/Grafana-prometheus.png)
 
+- Azure Cloud Services Flows.
+
+![img.png](images/img_10.png)
+![img.png](images/img_11.png)
+
 ~~~ yaml
 version: '3'
 services:
