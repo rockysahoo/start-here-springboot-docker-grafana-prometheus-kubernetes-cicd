@@ -528,6 +528,7 @@ scrape_configs:
 
 - This configuration tells Prometheus to scrape metrics from the Spring Boot application running on `localhost:8081` at regular intervals, allowing you to monitor the application's performance and health over time.
 - You can then use Prometheus's query language (PromQL) to create custom queries and visualizations based on the collected metrics data, helping you gain insights into the application's behavior and performance.
+>> IMP: Prometheus server store data in it's `own local time-series database`, and it provides a powerful query language (PromQL) to retrieve and analyze the collected metrics data.
 - Overall, integrating Prometheus with your Spring Boot application **using Micrometer allows you** to effectively monitor and analyze the application's performance and health, enabling you to proactively identify and address any issues that may arise.
 - To get metrics with Prometheus in a Spring Boot application, you need to add the `spring-boot-starter-actuator` and `micrometer-registry-prometheus` dependencies, enable the actuator endpoints, and configure Prometheus to scrape the metrics endpoint. This setup allows you to monitor and analyze your application's performance effectively.
 - You can also create custom metrics using Micrometer by defining your own `MeterRegistry` and registering custom metrics with it. This allows you to track specific application metrics that are relevant to your use case, providing deeper insights into the application's behavior and performance.
@@ -543,4 +544,15 @@ docker compose -f docker-compose-app-postgres-prometheus-grafana down -d
 - Once logged in, you can add Prometheus as a data source in Grafana and create dashboards to visualize the metrics collected from your Spring Boot application.
 - By using Docker Compose to manage your application, Prometheus, and Grafana, you can easily set up a monitoring and visualization stack for your application, allowing you to gain insights into its performance and health in a consistent and portable environment. 
 - This setup allows you to effectively monitor and analyze your application's performance, identify potential issues, and make informed decisions to improve its reliability and scalability.
+
+> IMP-NOTE:
+> - Grafana does not store any of the metric data itself.
+> - When you build a dashboard, Grafana sends a PromQL query to Prometheus's HTTP API (/api/v1/query or /api/v1/query_range) every time the dashboard loads or refreshes.
+> - Prometheus computes/retrieves the result from its `time-series database` and `returns it as JSON` for Grafana.
+> - That's why we can say Grafana is a visualization layer on top of Prometheus, which is the data storage and query engine for metrics.
+> - In the Grafana Board, we could see the metrics in `Date Range` and `Time Range` format, which is the Prometheus data format stored inside the `prometheus time-series database`.
+> ![img.png](images/img_9.png)
+> - These data comes from Application's `[/q/metrics - /actuator/prometheus - /container - /k8s]` level but stored inside the Prometheus TimeSeries Database to show in the Grafana Board in the Range.
+> - Prometheus uses a time-series database to store the metrics data it collects from various sources, including your Spring Boot application. Otherwise, `**it won't be possible to scrape the data at a particular Date-Time and show it in the Grafana Board**`.
+
 
