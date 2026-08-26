@@ -7,39 +7,51 @@ Peer Study :-
 Repo URL : https://github.com/Luminary1992/peer-prog
 
 
-Session - 1) Build a basic Spring Boot application with some REST Endpoints.
-		- Build and call to endpoints. ✅
-		- get metrics with prometheous.✅
+Session - 1) 
+- Build a basic Spring Boot application with some REST Endpoints.
+  
+          - Build and call to endpoints. ✅
+          - get metrics with prometheus.✅
 
-Session - 2) Add Dockerfile 
+Session - 2) 
+- Add Dockerfile 
+
 		- Docker Image and Docker Containers.✅
 		- Build the docker image and run it.✅
 		- call the endpoints running in docker containers.✅
 		- push the image to docker-hub with a tag.✅
 
-Session - 3) Docker Compose 
-		- Build the app with docker-compose.yaml file.
-		- add database to application.
-		- database as the docker image (Postgres).
-		- app container talks to postgres container.
+Session - 3) 
+- Docker Compose
 
-Session - 4) Visualization 
-		- configure grafana.
-		- configure prometheus.
-		- catch metrics from the application and show in Grafana Dashboard.
-		- Grafana and Prometheus run as the Docker Containers (Images).
-		- Collects app metrics and docker metrics.
+		- Build the app with docker-compose.yaml file.✅
+		- add database to application.✅
+		- database as the docker image (Postgres).✅
+		- app container talks to postgres container.✅
+
+Session - 4) 
+- Visualization 
+
+		- configure grafana.✅
+		- configure prometheus.✅
+		- catch metrics from the application and show in Grafana Dashboard.✅
+		- Grafana and Prometheus run as the Docker Containers (Images).✅
+		- Collects app metrics and docker metrics.✅
 
 
-Session - 5) Kubernetes 
+Session - 5) 
+- Kubernetes
+
 		- Details Cluster, Node, Service, Pod , Container, Nginx/Ingress
 		- Deploy the application to pods
 		- Access it with pods IP.
 		- Grafana collects metrics from Kubernetes and shows them on the Dashboard.
 
 
-Session - 6) CI/CD
-		- Github Action
+Session - 6) 
+- CI/CD
+
+		- Github Action.
 		- Build the project, create the docker image and push to docker hub.
 		- pull the image from docker hub and deploy to Cluster.
 
