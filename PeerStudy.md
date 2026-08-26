@@ -42,10 +42,10 @@ Session - 4)
 Session - 5) 
 - Kubernetes
 
-		- Details Cluster, Node, Service, Pod , Container, Nginx/Ingress
-		- Deploy the application to pods
-		- Access it with pods IP.
-		- Grafana collects metrics from Kubernetes and shows them on the Dashboard.
+		- Details Cluster, Node, Service, Pod , Container, Nginx/Ingress.✅
+		- Deploy the application to pods.✅
+		- Access it with pods IP.✅
+		- Grafana collects metrics from Kubernetes and shows them on the Dashboard.✅
 
 
 Session - 6) 
