@@ -1,0 +1,165 @@
+# ============================================================
+# Prometheus - ConfigMap (prometheus.yml for Kubernetes)
+# ============================================================
+# This ConfigMap holds the Prometheus scrape configuration.
+# It tells Prometheus to scrape:
+#   1. Itself (prometheus)
+#   2. The Spring Boot app via Kubernetes DNS  (peer-study-service)
+#   3. cAdvisor for container/pod-level metrics
+#   4. kube-state-metrics for Kubernetes object metrics
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+
+      # Scrape Prometheus itself
+      - job_name: 'prometheus'
+        scrape_interval: 5s
+        static_configs:
+          - targets: ['localhost:9090']
+
+      # Scrape the Spring Boot application (via Kubernetes Service DNS)
+      # DNS format inside cluster: <service-name>.<namespace>.svc.cluster.local
+      - job_name: 'spring-boot-k8s'
+        scrape_interval: 5s
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['peer-study-service.default.svc.cluster.local:80']
+            labels:
+              application: 'peer-study-app'
+              environment: 'kubernetes'
+
+      # Scrape cAdvisor for container / pod CPU, memory, network metrics
+      # cAdvisor is embedded in the kubelet on each node
+      - job_name: 'kubernetes-cadvisor'
+        scrape_interval: 10s
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+
+      # Scrape kube-state-metrics for Deployment, Pod, Service object states
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
+
+---
+# ============================================================
+# Prometheus - Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus   # Must have ClusterRole to scrape k8s metrics
+      containers:
+        - name: prometheus
+          image: prom/prometheus:latest
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+            - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+            - "--web.console.templates=/usr/share/prometheus/consoles"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+            - name: prometheus-storage
+              mountPath: /prometheus
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-config
+        - name: prometheus-storage
+          emptyDir: {}
+---
+# ============================================================
+# Prometheus - Service (NodePort so you can open the UI)
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  labels:
+    app: prometheus
+spec:
+  type: NodePort
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+      nodePort: 30090
+---
+# ============================================================
+# Prometheus - ServiceAccount + ClusterRole + ClusterRoleBinding
+# Needed so Prometheus can discover and scrape Kubernetes nodes/pods
+# ============================================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/proxy", "services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: default
+

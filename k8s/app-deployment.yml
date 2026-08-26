@@ -1,0 +1,56 @@
+# ============================================================
+# Spring Boot Application - Kubernetes Deployment
+# ============================================================
+# Deploys the peer-study Spring Boot app as a Pod inside a ReplicaSet.
+# The Deployment controller ensures the desired number of replicas
+# are always running and handles rolling updates / rollbacks.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peer-study-app
+  labels:
+    app: peer-study-app
+spec:
+  replicas: 2  # Run 2 identical Pods for basic high-availability
+  selector:
+    matchLabels:
+      app: peer-study-app
+  template:
+    metadata:
+      labels:
+        app: peer-study-app
+    spec:
+      containers:
+        - name: peer-study-app
+          image: yourusername/peer-study:0.0.1-dev   # Replace with your Docker Hub image
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081   # Port the app listens on inside the container
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-service:5432/peer_study_db
+            - name: SPRING_DATASOURCE_USERNAME
+              value: testuser
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: testpassword
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 15
+

@@ -1,7 +1,7 @@
 # Spring Boot App
 
 
-### Spring Boot Flow Diagram
+## Spring Boot Flow Diagram
 
 ---
 
@@ -40,7 +40,7 @@ java -jar peer-study-0.0.1-dev.jar server.port=8082
 ~~~
 - This is going to override the default port provided in the `application.yaml` file and run the application on port 8082.
 
-### Get metrics with Prometheus.
+## Get metrics with Prometheus.
 
 ---
 
@@ -108,7 +108,7 @@ scrape_configs:
 - In summary, to get metrics with Prometheus in a Spring Boot application, you need to add the `spring-boot-starter-actuator` and `micrometer-registry-prometheus` dependencies, enable the actuator endpoints, and configure Prometheus to scrape the metrics endpoint. This setup allows you to monitor and analyze your application's performance effectively.
 - You can also create custom metrics using Micrometer by defining your own `MeterRegistry` and registering custom metrics with it. This allows you to track specific application metrics that are relevant to your use case, providing deeper insights into the application's behavior and performance.
 
-### Add Dockerfile - Build Image - Run Container - Push to Docker Hub - Pull from Docker Hub - Run Container from Docker Hub
+## Add Dockerfile - Build Image - Run Container - Push to Docker Hub - Pull from Docker Hub - Run Container from Docker Hub
 
 ---
 
@@ -246,7 +246,7 @@ docker run -p 8083:8081 yourusername/peer-study:0.0.1-dev
 - This process allows you to containerize your application and share it easily through Docker Hub.
 - Overall, using Docker allows you to create a consistent and portable environment for your application, making it easier to deploy and manage across different environments and platforms.
 
-### Docker Compose - Build the app with docker-compose.yaml file - add database to application - database as the docker image (Postgres) - app container talks to postgres container.
+## Docker Compose - Build the app with docker-compose.yaml file - add database to application - database as the docker image (Postgres) - app container talks to postgres container.
 
 ---
 
@@ -417,7 +417,7 @@ docker run -p 8081:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/peer_
 docker run -p 8082:8081 -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/mylocaldb -e SPRING_DATASOURCE_USERNAME=mylocaldb -e SPRING_DATASOURCE_PASSWORD=mylocaldb yourusername/peer-study:0.0.1-dev
 ~~~
 
-### Visualization of the app : Collect Metrics with Prometheus - Visualize with Grafana - Grafana and Prometheus run as the Docker Containers (Images) - Collects app metrics and docker metrics.
+## Visualization of the app : Collect Metrics with Prometheus - Visualize with Grafana - Grafana and Prometheus run as the Docker Containers (Images) - Collects app metrics and docker metrics.
 - To visualize the metrics collected from your Spring Boot application, you can use Grafana, which is a popular open-source platform for monitoring and observability.
 - Grafana allows you to create dashboards and visualizations based on the metrics collected from your application and other sources, providing insights into the performance and health of your application.
 - To set up Grafana and Prometheus as Docker containers, you can use the following `docker-compose-app-postgres-prometheus-grafana.yml` file:
@@ -559,5 +559,380 @@ docker compose -f docker-compose-app-postgres-prometheus-grafana down -d
 > ![img.png](images/img_9.png)
 > - These data comes from Application's `[/q/metrics - /actuator/prometheus - /container - /k8s]` level but stored inside the Prometheus TimeSeries Database to show in the Grafana Board in the Range.
 > - Prometheus uses a time-series database to store the metrics data it collects from various sources, including your Spring Boot application. Otherwise, `**it won't be possible to scrape the data at a particular Date-Time and show it in the Grafana Board**`.
+
+---
+
+## Kubernetes - k8s
+
+- Cluster — Control Plane + Worker Nodes diagram explained
+- Node — kubelet, kube-proxy, container runtime
+- Pod — smallest deployable unit, ephemeral, gets its own IP
+- Service — stable DNS/IP over ephemeral Pods; all 4 types (ClusterIP, NodePort, LoadBalancer, ExternalName) with a comparison table
+- Container — lives inside a Pod, shares the Pod's network
+- Nginx / Ingress — reverse proxy "front door" of the cluster, routing rules, difference vs NodePort/LoadBalancer
+
+
+
+### 1. Kubernetes Core Concepts: Cluster, Node, Service, Pod, Container, Nginx / Ingress
+
+---
+
+#### Cluster
+- A **Kubernetes Cluster** is the top-level unit. It is a set of machines (physical or virtual) that run containerized workloads managed by Kubernetes.
+- Every cluster has:
+  - **Control Plane** (master) — the "brain" that schedules workloads, maintains desired state, and exposes the Kubernetes API.
+  - **Worker Nodes** — the machines that actually run your application containers.
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   Kubernetes Cluster                │
+│                                                     │
+│  ┌──────────────────────┐  ┌──────────────────────┐│
+│  │    Control Plane     │  │     Worker Node(s)   ││
+│  │  - API Server        │  │  - kubelet           ││
+│  │  - Scheduler         │  │  - kube-proxy        ││
+│  │  - Controller Mgr    │  │  - Container Runtime ││
+│  │  - etcd (state DB)   │  │  - Pods              ││
+│  └──────────────────────┘  └──────────────────────┘│
+└─────────────────────────────────────────────────────┘
+```
+
+#### Node
+- A **Node** is a single worker machine (VM or bare-metal) inside the cluster.
+- Every Node runs:
+  - `kubelet` — agent that communicates with the Control Plane and ensures containers are running.
+  - `kube-proxy` — manages network rules so Pods can communicate.
+  - **Container Runtime** (e.g., containerd, Docker) — runs the actual containers.
+- You can list nodes with: `kubectl get nodes`
+
+#### Pod
+- A **Pod** is the **smallest deployable unit** in Kubernetes.
+- A Pod wraps one or more containers that share the same:
+  - **Network namespace** (same IP address, same port space).
+  - **Storage volumes**.
+- Pods are **ephemeral** — they can be created, killed, and replaced at any time.
+- Each Pod gets its **own cluster-internal IP address**.
+- Pods do **not** get a stable IP — that is the job of a **Service**.
+
+```
+┌─────────────────── Pod ───────────────────┐
+│  IP: 10.244.0.5                           │
+│  ┌────────────────────────────────────┐   │
+│  │  Container: peer-study-app         │   │
+│  │  Port: 8081                        │   │
+│  └────────────────────────────────────┘   │
+│  Shared Volume (optional)                 │
+└───────────────────────────────────────────┘
+```
+
+#### Service
+- A **Service** gives a stable **DNS name + virtual IP (ClusterIP)** that routes traffic to a set of matching Pods via label selectors.
+- Service DNS name starts with `service-name.namespace.svc.cluster.local`.
+- Without a Service, you would need to know each Pod's dynamic IP.
+- Service types:
+
+| Type           | Description                                                        |
+|----------------|--------------------------------------------------------------------|
+| `ClusterIP`    | Default. Accessible **only inside** the cluster.                  |
+| `NodePort`     | Exposes the service on a static port on **every Node's IP**.      |
+| `LoadBalancer` | Provisions an external cloud load balancer (AWS ELB, GCP LB…).   |
+| `ExternalName` | Maps to an external DNS name (no proxying).                       |
+
+- Services use **label selectors** to find the right Pods:
+```yaml
+selector:
+  app: peer-study-app   # matches all Pods that have this label
+```
+
+#### Container
+- A **Container** is the actual running process (Docker image). In Kubernetes, containers live **inside Pods**.
+- Kubernetes does **not** manage containers directly — it manages Pods, and Pods manage containers.
+- Each container has its own filesystem but shares the Pod's network and volumes.
+
+#### Nginx Ingress
+- An **Ingress** is a Kubernetes resource that defines HTTP/HTTPS routing rules from outside the cluster to internal Services.
+- An **Ingress Controller** (e.g., **Nginx Ingress Controller**) is the software that reads those rules and implements them as a reverse proxy.
+- `reverse-proxy` means your frontend requests go to the Ingress Controller, which then forwards them to the appropriate Service based on the URL path or hostname (Frontend won't know/talk to the backend directly).
+- Think of it as the **"front door"** of the cluster for HTTP traffic.
+
+```
+Internet
+   │
+   ▼
+Nginx Ingress Controller  (Listening on port 80/443 of the cluster)
+   │
+   ├──  /api   →  peer-study-service : 80
+   └──  /grafana → grafana-service : 3000
+```
+
+> **Key differences:**
+> - `NodePort` / `LoadBalancer` — expose a **single service** on a port.
+> - `Ingress` — routes **many services** via a single external IP / hostname using URL paths or virtual hosts.
+
+
+### 2. Deploy the Application to Pods
+
+---
+
+All Kubernetes manifest files for this project are in the `k8s/` folder.
+
+#### Step-by-step deployment
+
+**Prerequisites:**
+- A running Kubernetes cluster (local: `minikube`, `kind`, or Docker Desktop Kubernetes).
+- `kubectl` configured to point to your cluster.
+- The application Docker image pushed to Docker Hub (replace `yourusername` in the YAMLs).
+
+**1. Start Minikube (local cluster)**
+
+~~~ bash
+minikube start
+# Check cluster status
+kubectl cluster-info
+kubectl get nodes
+~~~
+
+**2. Deploy PostgreSQL (database)**
+
+~~~ bash
+kubectl apply -f k8s/postgres-deployment.yml
+# Verify, -l stands for lebel like namespace
+kubectl get pods -l app=postgres
+kubectl get service postgres-service
+~~~
+
+**3. Deploy the Spring Boot Application**
+
+~~~ bash
+kubectl apply -f k8s/app-deployment.yml
+kubectl apply -f k8s/app-service.yml
+# Verify
+kubectl get deployments
+kubectl get pods -l app=peer-study-app
+kubectl get service peer-study-service
+~~~
+
+**4. Deploy Prometheus & Grafana for Kubernetes metrics**
+
+~~~ bash
+kubectl apply -f k8s/prometheus-k8s.yml
+kubectl apply -f k8s/grafana-k8s.yml
+~~~
+
+**5. (Optional) Enable Nginx Ingress**
+
+~~~ bash
+# Minikube
+minikube addons enable ingress
+# Apply ingress rules
+kubectl apply -f k8s/ingress.yml
+~~~
+
+**6. Check everything is running**
+
+~~~ bash
+kubectl get all
+# Or watch for pod readiness:
+kubectl get pods --watch
+~~~
+
+
+
+### 3. Access the Application via Pod IP
+
+---
+
+Kubernetes assigns each Pod its own internal **cluster IP**. You can use this IP to reach the Pod directly from within the cluster (e.g., from another Pod or a `kubectl exec` shell).
+
+#### Get Pod IP
+
+~~~ bash
+# List pods and their IPs
+kubectl get pods -o wide
+
+# Example output:
+# NAME                              READY   STATUS    IP           NODE
+# peer-study-app-6d9f7b4c8-x2kpq   1/1     Running   10.244.0.5   minikube
+# peer-study-app-6d9f7b4c8-r8mzw   1/1     Running   10.244.0.6   minikube
+~~~
+
+#### Access application inside cluster using Pod IP
+
+~~~ bash
+# Open a temporary debug pod inside the cluster
+kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- sh
+
+# Inside the temporary pod, curl the application Pod directly by IP
+curl http://10.244.0.5:8081/actuator/health
+
+# OR use the stable Service DNS (recommended):
+curl http://peer-study-service.default.svc.cluster.local/actuator/health
+~~~
+
+#### Access application from your local machine (outside the cluster)
+
+~~~ bash
+# Option A: NodePort — get Node IP and use nodePort 30081
+minikube ip          # e.g., 192.168.49.2
+# Then open: http://192.168.49.2:30081
+
+# Option B: kubectl port-forward (tunnels the Service to localhost)
+kubectl port-forward service/peer-study-service 8082:80
+# Then open: http://localhost:8082
+
+# Option C: minikube service shortcut
+minikube service peer-study-service
+~~~
+
+> **Why not always use Pod IPs?**
+> - Pod IPs change every time a Pod is restarted or rescheduled.
+> - A **Service** provides a stable virtual IP / DNS that load-balances across all healthy Pod replicas automatically.
+> - Always prefer the Service DNS (`<service-name>.<namespace>.svc.cluster.local`) over raw Pod IPs in production.
+
+#### Useful kubectl commands for inspection
+
+~~~ bash
+# Describe a pod (events, resource usage, container status)
+kubectl describe pod <pod-name>
+
+# Stream logs from a pod
+kubectl logs -f <pod-name>
+
+# Execute a command inside a running container
+kubectl exec -it <pod-name> -- sh
+
+# Edit the current deployment (e.g., change image tag version)
+kubectl edit deployment peer-study-app
+kubectl rollout restart deployment/peer-study-app
+
+# Scale the deployment (more replicas = more pods)
+kubectl scale deployment peer-study-app --replicas=3
+
+# Rolling update (change image version)
+kubectl set image deployment/peer-study-app peer-study-app=yourusername/peer-study:0.0.2-dev
+
+# Rollback to previous version
+kubectl rollout undo deployment/peer-study-app
+
+# Delete all resources for the app
+kubectl delete -f k8s/
+~~~
+
+
+
+### 4. Grafana Collects Metrics from Kubernetes and Shows Them on the Dashboard
+
+---
+
+In the Docker Compose setup (previous session), Prometheus scraped metrics only from the **Spring Boot application**.  
+In Kubernetes, Prometheus can additionally scrape **cluster-level metrics**:
+
+| Metric Source        | What it measures                                              | How it's scraped                          |
+|----------------------|---------------------------------------------------------------|-------------------------------------------|
+| Spring Boot Actuator | App-level: JVM heap, HTTP requests, DB pool, custom counters | `/actuator/prometheus` via Service DNS    |
+| **cAdvisor**         | Pod/container CPU, memory, network, disk I/O per container   | Embedded in `kubelet` on every Node       |
+| **kube-state-metrics** | Kubernetes object states (Deployment replicas, Pod phase) | Separate Deployment in `kube-system` ns   |
+| Node Exporter        | Host OS metrics (Node CPU, memory, disk)                     | DaemonSet on every Node                   |
+
+#### How the metrics flow
+
+```
+Spring Boot Pod            kubelet (cAdvisor)         kube-state-metrics
+  /actuator/prometheus       /metrics/cadvisor           :8080/metrics
+        │                          │                           │
+        └──────────────────────────┴───────────────────────────┘
+                                   │  scrape (every 5-15 s)
+                            Prometheus Pod
+                         (stores time-series data)
+                                   │  PromQL query
+                            Grafana Pod
+                         (renders dashboards)
+                                   │
+                           Browser / User
+```
+
+#### Deploy Prometheus + Grafana in Kubernetes
+
+~~~ bash
+kubectl apply -f k8s/prometheus-k8s.yml   # ConfigMap + Deployment + Service + RBAC
+kubectl apply -f k8s/grafana-k8s.yml      # Deployment + Service
+
+# Access Prometheus UI
+kubectl port-forward service/prometheus-service 9090:9090
+# Open: http://localhost:9090
+
+# Access Grafana UI
+kubectl port-forward service/grafana-service 3000:3000
+# Open: http://localhost:3000  (admin / admin)
+~~~
+
+#### Setting up Grafana with Kubernetes dashboards
+
+1. **Add Prometheus data source** in Grafana:
+   - Go to `Connections → Data Sources → Add data source → Prometheus`.
+   - URL: `http://prometheus-service.default.svc.cluster.local:9090`
+   - Click **Save & Test**.
+
+2. **Import community dashboards** (no manual PromQL needed):
+
+| Dashboard Name                     | Grafana ID | What it shows                              |
+|------------------------------------|------------|--------------------------------------------|
+| Spring Boot Statistics             | `6756`     | JVM, HTTP, thread pool metrics             |
+| Kubernetes cluster (kube-state)    | `13332`    | Pod/Deployment/Node health & states        |
+| Kubernetes / Compute Resources     | `17375`    | CPU & memory per namespace/pod/container   |
+| Docker & cAdvisor                  | `893`      | Container resource usage                   |
+
+   - In Grafana → `Dashboards → Import` → enter the ID → select your Prometheus data source → Import.
+
+3. **Example PromQL queries for Kubernetes metrics:**
+
+~~~ promql
+# CPU usage per pod (cores)
+sum(rate(container_cpu_usage_seconds_total{namespace="default"}[1m])) by (pod)
+
+# Memory usage per pod (bytes)
+sum(container_memory_usage_bytes{namespace="default"}) by (pod)
+
+# Number of running pods per deployment
+kube_deployment_status_replicas_ready{namespace="default"}
+
+# HTTP request rate from Spring Boot app
+rate(http_server_requests_seconds_count{job="spring-boot-k8s"}[1m])
+
+# JVM heap used
+jvm_memory_used_bytes{area="heap", job="spring-boot-k8s"}
+~~~
+
+#### Install kube-state-metrics (required for Kubernetes object metrics)
+
+~~~ bash
+# Using Helm (recommended)
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install kube-state-metrics prometheus-community/kube-state-metrics --namespace kube-system
+
+# OR apply manifests directly
+kubectl apply -f https://github.com/kubernetes/kube-state-metrics/releases/latest/download/kube-state-metrics.yaml
+~~~
+
+> **IMP NOTE — Grafana in Kubernetes vs Docker Compose:**
+> - In Docker Compose, Prometheus reached the Spring Boot app via `host.docker.internal`.
+> - In Kubernetes, Prometheus reaches the Spring Boot app via **Kubernetes Service DNS** (`peer-study-service.default.svc.cluster.local`).
+> - Kubernetes DNS is automatically configured — every Service gets a DNS entry. No need to hard-code IPs.
+> - The Prometheus ConfigMap (`k8s/prometheus-k8s.yml`) already contains the correct Kubernetes scrape configuration.
+
+
+
+### Kubernetes Files Summary (`k8s/` folder)
+
+
+| File                        | Purpose                                                       |
+|-----------------------------|---------------------------------------------------------------|
+| `k8s/app-deployment.yml`    | Deploys the Spring Boot app as 2 replica Pods(app deployment) |
+| `k8s/app-service.yml`       | Exposes the app via NodePort (port 30081)                     |
+| `k8s/postgres-deployment.yml` | Deploys PostgreSQL + ClusterIP Service                        |
+| `k8s/ingress.yml`           | Nginx Ingress rules to route `peer-study.local` to the app    |
+| `k8s/prometheus-k8s.yml`    | Prometheus (ConfigMap + Deployment + Service + RBAC)          |
+| `k8s/grafana-k8s.yml`       | Grafana Deployment + Service (NodePort 30300)                 |
 
 
