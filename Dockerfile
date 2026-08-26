@@ -38,7 +38,9 @@ COPY target            $APP_HOME/target/
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 # Use a separate, minimal JRE-only image for the final artifact.
 # The build_image stage (JDK + Maven + sources) is now discarded, keeping the shipped image as small and secure as possible.
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:25-jre-alpine as release_image
+LABEL stage=release
+
 
 ENV APP_HOME=/app
 WORKDIR $APP_HOME
