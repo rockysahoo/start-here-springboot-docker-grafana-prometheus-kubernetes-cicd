@@ -9,6 +9,8 @@ metadata:
     app: postgres
 spec:
   replicas: 1
+  strategy:
+    type: Recreate          # avoid two pods fighting over one data dir
   selector:
     matchLabels:
       app: postgres
@@ -19,7 +21,8 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:latest
+          image: postgres:17-alpine
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
           env:
@@ -29,6 +32,8 @@ spec:
               value: testpassword
             - name: POSTGRES_DB
               value: peer_study_db
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata   # subdir: survives lost+found on a real PVC
           resources:
             requests:
               memory: "256Mi"
@@ -36,12 +41,22 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "testuser", "-d", "peer_study_db"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "testuser", "-d", "peer_study_db"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: postgres-storage
       volumes:
         - name: postgres-storage
-          emptyDir: {}   # Use a PersistentVolumeClaim in production for data persistence
+          emptyDir: {}
 ---
 # ============================================================
 # PostgreSQL - ClusterIP Service (internal access only)

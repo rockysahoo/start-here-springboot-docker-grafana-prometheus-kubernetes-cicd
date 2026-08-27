@@ -710,6 +710,11 @@ kubectl apply -f k8s/app-service.yml
 kubectl get deployments
 kubectl get pods -l app=peer-study-app
 kubectl get service peer-study-service
+
+# Image-Pulling Issue
+docker login --username YOUR_USERNAME
+Password: [paste your PAT here]
+PAT : Docker Hub Home -> Accout Setting -> Personal Access Token
 ~~~
 
 **4. Deploy Prometheus & Grafana for Kubernetes metrics**

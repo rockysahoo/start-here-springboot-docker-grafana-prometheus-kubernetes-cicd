@@ -37,7 +37,7 @@ RUN mvn clean install -DskipTests -B
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 # Use a separate, minimal JRE-only image for the final artifact.
 # The build_image stage (JDK + Maven + sources) is now discarded, keeping the shipped image as small and secure as possible.
-FROM eclipse-temurin:25-jre-alpine AS release_image
+FROM eclipse-temurin:25-jre-noble AS release_image
 LABEL stage=release
 
 
