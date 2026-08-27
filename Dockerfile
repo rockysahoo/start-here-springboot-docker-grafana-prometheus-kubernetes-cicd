@@ -29,7 +29,6 @@ COPY .gitignore       $APP_HOME/
 COPY mvnw             $APP_HOME/
 COPY src              $APP_HOME/src
 RUN mvn clean install -DskipTests -B
-COPY target            $APP_HOME/target/
 
 # Copy the jar file from the target directory to the container and rename it to app.jar. This is the jar file that will be run when the container starts.
 # This for, you need to build the jar file locally and then copy it to the container.
@@ -38,7 +37,7 @@ COPY target            $APP_HOME/target/
 # ── Stage 2: Runtime ──────────────────────────────────────────────────────────
 # Use a separate, minimal JRE-only image for the final artifact.
 # The build_image stage (JDK + Maven + sources) is now discarded, keeping the shipped image as small and secure as possible.
-FROM eclipse-temurin:25-jre-alpine as release_image
+FROM eclipse-temurin:25-jre-alpine AS release_image
 LABEL stage=release
 
 
