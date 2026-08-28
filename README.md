@@ -715,6 +715,14 @@ kubectl get service peer-study-service
 docker login --username YOUR_USERNAME
 Password: [paste your PAT here]
 PAT : Docker Hub Home -> Accout Setting -> Personal Access Token
+
+# load the image into minikube
+# Your image exists in Windows Docker(local build), but minikube runs its own Docker daemon inside the kicbase container.
+minikube image load yourusername/peer-study:latest
+minikube image load peer-study:latest
+minikube image ls | Select-String peer-study    # verify it's there
+kubectl rollout restart deployment peer-study-app
+
 ~~~
 
 **4. Deploy Prometheus & Grafana for Kubernetes metrics**
@@ -766,6 +774,9 @@ kubectl get pods -o wide
 ~~~ bash
 # Open a temporary debug pod inside the cluster
 kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- sh
+
+# Go Inside the pod
+kubectl exec -it grafana-6d7c94fd68-fqnkp -- sh
 
 # Inside the temporary pod, curl the application Pod directly by IP
 curl http://10.244.0.5:8081/actuator/health
