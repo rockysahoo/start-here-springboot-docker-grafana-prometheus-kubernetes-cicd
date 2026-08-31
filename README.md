@@ -1001,9 +1001,8 @@ kubectl apply -f https://github.com/kubernetes/kube-state-metrics/releases/lates
 - TODO
 
 
-## CI/CD
+## CI/CD - Continuous Integration and Continuous Deployment
 
----
 
 This session focuses on automating build, image publishing, and Kubernetes deployment using GitHub Actions.
 
