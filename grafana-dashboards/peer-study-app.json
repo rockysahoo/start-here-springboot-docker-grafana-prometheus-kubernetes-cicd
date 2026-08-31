@@ -2,7 +2,7 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "dshbrd_marketplace_api",
+    "name": "dshbrd_peer-study-app",
     "namespace": "default",
     "uid": "3fa32395-ff67-493e-8a74-1d5cea8ca2ea",
     "resourceVersion": "1788185970287007",
@@ -1803,7 +1803,7 @@
                   "group": "renameByRegex",
                   "spec": {
                     "options": {
-                      "regex": "/{.*dtdp-marketplace-api-(.*)}/",
+                      "regex": "/{.*peer-study-app-(.*)}/",
                       "renamePattern": "$1"
                     }
                   }
@@ -1970,7 +1970,7 @@
                   "group": "renameByRegex",
                   "spec": {
                     "options": {
-                      "regex": "/.*dtdp-marketplace-api-(.*)/",
+                      "regex": "/.*peer-study-app-(.*)/",
                       "renamePattern": "$1"
                     }
                   }
@@ -3875,7 +3875,7 @@
     "preload": false,
     "tags": [
       "home_dashboard",
-      "marketplace",
+      "peer-study-app",
       "prometheus"
     ],
     "timeSettings": {
@@ -3908,8 +3908,8 @@
           "name": "image_name",
           "query": "peer-study-app",
           "current": {
-            "text": "dtdp-marketplace-api",
-            "value": "dtdp-marketplace-api"
+            "text": "peer-study-app",
+            "value": "peer-study-app"
           },
           "label": "image_name",
           "hide": "hideVariable",
@@ -4258,10 +4258,10 @@
         "kind": "ConstantVariable",
         "spec": {
           "name": "am_cloud_role_name",
-          "query": "Marketplace API",
+          "query": "peer-study-app API",
           "current": {
-            "text": "Marketplace API",
-            "value": "Marketplace API"
+            "text": "peer-study-app API",
+            "value": "peer-study-app API"
           },
           "hide": "hideVariable",
           "skipUrlSync": true
@@ -4273,8 +4273,8 @@
           "name": "am_image_name",
           "query": "peer-study-app",
           "current": {
-            "text": "marketplace-api",
-            "value": "marketplace-api"
+            "text": "peer-study-app",
+            "value": "peer-study-app"
           },
           "hide": "hideVariable",
           "skipUrlSync": true
