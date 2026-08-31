@@ -1272,24 +1272,27 @@ kubectl rollout status deployment/peer-study-app
 
 ### 10) Actual Workflows Added in This Repo
 
-- Workflow files: `.github/workflows/ci.yml` and `.github/workflows/cd.yml`
+- Workflow file currently present: `.github/workflows/ci.yml`
 - Image name used: `peer-study`
 - Kubernetes namespace used: `default`
 - Kubernetes deployment used: `peer-study-app`
 - Kubernetes container used: `peer-study-app`
 - Docker image tag version source: `pom.xml` -> `<version>` (example: `0.0.1-dev`)
 
-Required GitHub secrets:
+Required GitHub secrets for `ci.yml`:
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+
+Optional/future CD secrets:
+
 - `KUBE_CONFIG_STAGING`
 - `KUBE_CONFIG_PRODUCTION`
 
 ### 11) Branch Strategy Example (`main` for CI, `release/*` for CD)
 
 - `push` to `main` (including PR merge): runs `ci.yml`, executes tests, builds image, and pushes image.
-- `create` event for branch `release/*` (created from `main`): runs `cd.yml` and deploys that `pom.xml` image version.
+- `create` event for branch `release/*` (created from `main`): can run a separate `cd.yml` workflow to deploy that `pom.xml` image version.
 
 Flow summary:
 
@@ -1306,4 +1309,4 @@ To keep CI stable and avoid PostgreSQL dependency during tests:
 - Added `com.h2database:h2` as a test dependency in `pom.xml`.
 - Added `src/test/resources/application-test.yaml` with in-memory H2 datasource.
 - Added `@ActiveProfiles("test")` in `src/test/java/spring_boot/peer_prog/PeerProgApplicationTests.java`.
-- CI now runs `mvn -B test -Dspring.profiles.active=test` in `.github/workflows/cicd.yml`.
+- CI now runs `mvn -B test -Dspring.profiles.active=test` in `.github/workflows/ci.yml`.

@@ -1,0 +1,45 @@
+name: CD
+
+on:
+  create:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  K8S_NAMESPACE: default
+  K8S_DEPLOYMENT: peer-study-app
+  K8S_CONTAINER: peer-study-app
+
+jobs:
+  deploy-release-branch:
+    name: Deploy on Release Branch Create
+    if: github.event_name == 'create' && github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.ref }}
+
+      - name: Read artifact and version from pom.xml
+        id: pom
+        run: |
+          APP_NAME="$(mvn -q -DforceStdout help:evaluate -Dexpression=project.artifactId | tr -d '\r')"
+          APP_VERSION="$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version | tr -d '\r')"
+          echo "app_name=${APP_NAME}" >> "$GITHUB_OUTPUT"
+          echo "app_version=${APP_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" > "$HOME/.kube/config"
+
+      - name: Deploy image version from pom.xml
+        run: |
+          IMAGE_REF="${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.pom.outputs.app_name }}:${{ steps.pom.outputs.app_version }}"
+          kubectl -n "${K8S_NAMESPACE}" set image deployment/"${K8S_DEPLOYMENT}" "${K8S_CONTAINER}"="${IMAGE_REF}"
+          kubectl -n "${K8S_NAMESPACE}" rollout status deployment/"${K8S_DEPLOYMENT}"
+
