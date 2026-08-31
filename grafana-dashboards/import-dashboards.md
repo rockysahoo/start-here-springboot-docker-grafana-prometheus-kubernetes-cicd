@@ -44,10 +44,15 @@ If Grafana has file upload enabled:
 **File:** `spring-boot-app-dashboard.json`
 
 **Panels:**
-- JVM Memory Usage - Shows heap and non-heap memory utilization
+- JVM Memory Usage - Shows JVM memory consumption by memory pool
 - JVM Live Threads - Gauge showing active thread count
-- HTTP Request Rate - Requests per second
+- HTTP Request Rate - Requests per second across application endpoints
 - HTTP Request Latency - 95th and 99th percentile latency
+- API Request Volume by Endpoint - Per-endpoint request throughput
+- API Error Rate by Endpoint - 4xx and 5xx request rate by endpoint
+- Database Connection Pool - Active, idle, and pending HikariCP connections
+- JVM Heap Usage - Heap used vs heap max
+- CPU Usage - Process CPU vs system CPU
 
 **Requirements:**
 - Spring Boot application with Micrometer Prometheus exporter
@@ -102,7 +107,13 @@ jvm_memory_used_bytes{application="peer-study-app"}
 rate(jvm_gc_memory_promoted_bytes_total[5m])
 
 # Thread count
-jvm_threads_live{application="peer-study-app"}
+jvm_threads_live_threads{application="peer-study-app"}
+
+# Heap usage
+jvm_memory_used_bytes{application="peer-study-app", area="heap"}
+
+# Heap max
+jvm_memory_max_bytes{application="peer-study-app", area="heap"}
 ```
 
 ### Kubernetes Metrics
@@ -120,13 +131,37 @@ kube_pod_status_phase{pod=~"peer-study-.*"}
 ### HTTP Metrics
 ```promql
 # Request rate
-rate(http_requests_total[1m])
+sum by(uri, method) (rate(http_server_requests_seconds_count{application="peer-study-app"}[5m]))
 
 # Response time (95th percentile)
-histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application="peer-study-app"}[5m]))
+
+# Response time (99th percentile)
+histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{application="peer-study-app"}[5m]))
 
 # Error rate
-rate(http_requests_total{status=~"5.."}[1m])
+sum by(status, uri) (rate(http_server_requests_seconds_count{application="peer-study-app", status=~"4..|5.."}[5m]))
+
+# Request volume for app endpoints
+sum by(uri, method) (rate(http_server_requests_seconds_count{application="peer-study-app", uri=~"/app/v[12]/.*"}[5m]))
+```
+
+### Database and CPU Metrics
+```promql
+# Active database connections
+hikaricp_connections_active{application="peer-study-app"}
+
+# Idle database connections
+hikaricp_connections_idle{application="peer-study-app"}
+
+# Pending database connections
+hikaricp_connections_pending{application="peer-study-app"}
+
+# Process CPU usage
+process_cpu_usage{application="peer-study-app"}
+
+# System CPU usage
+system_cpu_usage{application="peer-study-app"}
 ```
 
 ## Troubleshooting

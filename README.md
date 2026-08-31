@@ -737,8 +737,22 @@ kubectl apply -f k8s/grafana-k8s.yml
 ~~~ bash
 # Minikube
 minikube addons enable ingress
+
+# If you are using the Docker driver on Windows/macOS, keep this running
+# in a separate terminal so port 80/443 on localhost can reach the ingress controller
+minikube tunnel
+
 # Apply ingress rules
 kubectl apply -f k8s/ingress.yml
+
+# Add either (or both) entries to your hosts file:
+#   C:\Windows\System32\drivers\etc\hosts   (Windows)
+#   /etc/hosts                                  (Linux/macOS)
+# 127.0.0.1 peer-study.local
+# 127.0.0.1 kubernetes.docker.internal
+
+# Verify the ingress gets an address (often 127.0.0.1 with minikube tunnel)
+kubectl get ingress
 ~~~
 
 **6. Check everything is running**
@@ -771,6 +785,9 @@ kubectl get pods -o wide
 
 #### Access application inside cluster using Pod IP
 
+>> We can't access the applications/pods directly from our local machine/cluster because the Pod IPs are **internal to the cluster**.
+>> To access it, go inside the pods(any) and then do `curl`.
+
 ~~~ bash
 # Open a temporary debug pod inside the cluster
 kubectl run curl-test --image=curlimages/curl --rm -it --restart=Never -- sh
@@ -790,14 +807,19 @@ curl http://peer-study-service.default.svc.cluster.local/actuator/health
 ~~~ bash
 # Option A: NodePort — get Node IP and use nodePort 30081
 minikube ip          # e.g., 192.168.49.2
-# Then open: http://192.168.49.2:30081
+# Then open: http://192.168.49.2:30081/actuator/info
 
 # Option B: kubectl port-forward (tunnels the Service to localhost)
 kubectl port-forward service/peer-study-service 8082:80
-# Then open: http://localhost:8082
+# Then open: http://localhost:8082/actuator/info
 
 # Option C: minikube service shortcut
 minikube service peer-study-service
+
+# Option D: Ingress host-based routing (requires step 5 above)
+# PowerShell users: prefer curl.exe or a full Invoke-WebRequest URL with http://
+curl.exe http://peer-study.local/actuator/info
+curl.exe http://kubernetes.docker.internal/actuator/info
 ~~~
 
 > **Why not always use Pod IPs?**
@@ -900,7 +922,30 @@ kubectl port-forward service/grafana-service 3000:3000
 
    - In Grafana → `Dashboards → Import` → enter the ID → select your Prometheus data source → Import.
 
-3. **Example PromQL queries for Kubernetes metrics:**
+   - For the repository's own Spring Boot dashboard, use `grafana-dashboards/spring-boot-app-dashboard.json`.
+   - It now includes JVM memory, live threads, HTTP request rate/latency, API request volume, API error rate, database connection pool, heap usage, and CPU usage panels.
+
+### Spring Boot dashboard panel guide
+
+The repository's Spring Boot dashboard focuses on the most useful signals for day-to-day troubleshooting: application traffic, errors, database pool behavior, JVM memory, and CPU usage.
+
+| Panel | Purpose |
+|-------|---------|
+| JVM Memory Usage | Tracks memory pools used by the JVM so you can spot memory growth or leaks. |
+| JVM Live Threads | Shows the active JVM thread count to help spot thread spikes or saturation. |
+| HTTP Request Rate | Shows request throughput per endpoint and method. |
+| HTTP Request Latency | Highlights p95 and p99 response times for slow-request detection. |
+| API Request Volume by Endpoint | Breaks traffic down by app endpoint so you can identify hot paths. |
+| API Error Rate by Endpoint | Surfaces 4xx/5xx responses by endpoint to help isolate failures. |
+| Database Connection Pool | Tracks HikariCP active, idle, and pending connections. |
+| JVM Heap Usage | Compares heap used vs max heap to show memory pressure. |
+| CPU Usage | Compares process CPU and system CPU usage for application load. |
+
+![Grafana and Prometheus overview](images/Grafana-prometheus.png)
+
+*Use the image above as a quick visual reference for the monitoring stack. The actual repository dashboard is `grafana-dashboards/spring-boot-app-dashboard.json`.*
+
+### Example PromQL queries for Kubernetes metrics
 
 ~~~ promql
 # CPU usage per pod (cores)
@@ -947,7 +992,7 @@ kubectl apply -f https://github.com/kubernetes/kube-state-metrics/releases/lates
 | `k8s/app-deployment.yml`    | Deploys the Spring Boot app as 2 replica Pods(app deployment) |
 | `k8s/app-service.yml`       | Exposes the app via NodePort (port 30081)                     |
 | `k8s/postgres-deployment.yml` | Deploys PostgreSQL + ClusterIP Service                        |
-| `k8s/ingress.yml`           | Nginx Ingress rules to route `peer-study.local` to the app    |
+| `k8s/ingress.yml`           | Nginx Ingress rules to route `peer-study.local` / `kubernetes.docker.internal` to the app |
 | `k8s/prometheus-k8s.yml`    | Prometheus (ConfigMap + Deployment + Service + RBAC)          |
 | `k8s/grafana-k8s.yml`       | Grafana Deployment + Service (NodePort 30300)                 |
 

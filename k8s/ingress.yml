@@ -10,14 +10,13 @@ kind: Ingress
 metadata:
   name: peer-study-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
 spec:
   ingressClassName: nginx
   rules:
-    - host: peer-study.local    # Add "127.0.0.1 peer-study.local" to /etc/hosts (or C:\Windows\System32\drivers\etc\hosts on Windows)
+    - host: peer-study.local              # Add "127.0.0.1 peer-study.local" to your hosts file when using local ingress on Windows/macOS.
       http:
         paths:
           - path: /
@@ -27,4 +26,13 @@ spec:
                 name: peer-study-service
                 port:
                   number: 80
-
+    - host: kubernetes.docker.internal    # Backward-compatible local hostname; map it to 127.0.0.1 if it is not already resolvable on your machine.
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: peer-study-service
+                port:
+                  number: 80
