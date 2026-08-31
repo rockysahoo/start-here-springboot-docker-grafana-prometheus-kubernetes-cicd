@@ -997,3 +997,313 @@ kubectl apply -f https://github.com/kubernetes/kube-state-metrics/releases/lates
 | `k8s/grafana-k8s.yml`       | Grafana Deployment + Service (NodePort 30300)                 |
 
 
+### Send Grafana Alerts for any `Down Service`, `High CPU`, or `High Memory` usage'.
+- TODO
+
+
+## CI/CD
+
+---
+
+This session focuses on automating build, image publishing, and Kubernetes deployment using GitHub Actions.
+
+### 1) Goals
+
+- Use **GitHub Actions** to automate CI/CD.
+- Build and test the Spring Boot project in pipeline (**fail fast**).
+- Create Docker image and push it to Docker Hub.
+- Pull the image in Kubernetes and deploy/update the cluster.
+- Add staging to production promotion strategy.
+- Keep rollback steps ready using Kubernetes rollout history.
+
+### 2) Recommended CI/CD Flow
+
+1. Developer pushes code / opens PR.
+2. GitHub Actions runs `mvn test` (or `mvn verify`).
+3. If tests pass, pipeline builds Docker image.
+4. Pipeline tags image (`latest` + immutable tag like Git SHA).
+5. Pipeline pushes image to Docker Hub.
+6. CD job updates image in Kubernetes (staging first).
+7. Validate staging, then promote same image tag to production.
+8. If issue occurs, rollback with `kubectl rollout undo`.
+
+### 3) Image Tagging Strategy
+
+- Avoid deploying only `latest`.
+- Always publish at least one immutable tag:
+  - Git SHA: `yourusername/peer-study:<short-sha>`
+  - or SemVer: `yourusername/peer-study:1.4.2`
+- Optional: push both mutable and immutable tags:
+  - `latest`
+  - `<short-sha>`
+
+Example:
+
+~~~ bash
+docker build -t yourusername/peer-study:latest -t yourusername/peer-study:${GIT_SHA} .
+docker push yourusername/peer-study:latest
+docker push yourusername/peer-study:${GIT_SHA}
+~~~
+
+### 4) GitHub Secrets (Never Hardcode)
+
+Store sensitive values in repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `KUBE_CONFIG` (base64 kubeconfig or raw kubeconfig content based on your setup)
+
+Use secrets in workflow via `${{ secrets.SECRET_NAME }}`.
+
+### 5) Example GitHub Actions Workflow
+
+Create: `.github/workflows/cicd.yml`
+
+~~~ yaml
+name: CI-CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Run tests (fail fast)
+        run: mvn -B test
+
+  docker-build-push:
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set short SHA
+        id: vars
+        run: echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/peer-study:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/peer-study:${{ steps.vars.outputs.sha_short }}
+
+  deploy-staging:
+    needs: docker-build-push
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+
+      - name: Deploy image to staging
+        run: |
+          kubectl set image deployment/peer-study-app \
+            peer-study-app=${{ secrets.DOCKERHUB_USERNAME }}/peer-study:${GITHUB_SHA::7}
+          kubectl rollout status deployment/peer-study-app
+
+  deploy-production:
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+
+      - name: Promote same image tag to production
+        run: |
+          kubectl set image deployment/peer-study-app \
+            peer-study-app=${{ secrets.DOCKERHUB_USERNAME }}/peer-study:${GITHUB_SHA::7}
+          kubectl rollout status deployment/peer-study-app
+~~~
+
+### 6) Pull Image and Deploy to Kubernetes Cluster
+
+In Kubernetes, when deployment image is updated, kubelet pulls the new image tag from Docker Hub.
+
+~~~ bash
+kubectl set image deployment/peer-study-app peer-study-app=yourusername/peer-study:<tag>
+kubectl rollout status deployment/peer-study-app
+~~~
+
+Make sure your `k8s/app-deployment.yml` container name matches `peer-study-app` used in command.
+
+### 7) Rollback Strategy
+
+If deployment is unhealthy after release:
+
+~~~ bash
+kubectl rollout history deployment/peer-study-app
+kubectl rollout undo deployment/peer-study-app
+kubectl rollout status deployment/peer-study-app
+~~~
+
+You can also rollback to a specific revision:
+
+~~~ bash
+kubectl rollout undo deployment/peer-study-app --to-revision=2
+~~~
+
+### 8) Practical Notes
+
+- Keep CI and CD as separate jobs for clarity.
+- Run tests before Docker build to save time and cost.
+- Use immutable tags in deployments for traceability.
+- Use GitHub Environments (`staging`, `production`) with approval gates.
+- Add health checks/readiness probes so rollout status reflects real app readiness.
+
+### 9) Flux CD Deployment (Post Image Push)
+
+If you want GitOps style CD, use **Flux CD** after image push instead of running `kubectl set image` directly from GitHub Actions.
+
+#### Flow with Flux CD
+
+1. GitHub Actions builds/tests app.
+2. GitHub Actions pushes image to Docker Hub.
+3. GitHub Actions updates Kubernetes manifest image tag in Git (infra/manifests repo).
+4. Flux watches that repo and syncs change to cluster automatically.
+5. Cluster pulls new image and rolls out.
+
+#### Why this is useful
+
+- Cluster state is fully versioned in Git.
+- Easy audit trail of who changed what and when.
+- Safe rollback by reverting Git commit (Flux reapplies previous manifest).
+
+#### One-time Flux bootstrap (example)
+
+~~~ bash
+flux check
+flux bootstrap github \
+  --owner=<github-username> \
+  --repository=<gitops-repo-name> \
+  --branch=main \
+  --path=clusters/staging \
+  --personal
+~~~
+
+> Store the GitHub token used for bootstrap securely; do not hardcode it.
+
+#### Example GitOps manifest snippet
+
+`k8s/app-deployment.yml` image should be tag-based and immutable:
+
+~~~ yaml
+containers:
+  - name: peer-study-app
+    image: yourusername/peer-study:2f4a9c1
+~~~
+
+#### Option A: Update image tag from GitHub Actions (simple)
+
+After push, update YAML tag and commit to GitOps repo.
+
+~~~ bash
+# Example idea: update image tag in manifest, commit, and push
+git add k8s/app-deployment.yml
+git commit -m "chore: deploy peer-study image <short-sha>"
+git push origin main
+~~~
+
+Flux detects this commit and deploys automatically.
+
+#### Option B: Flux image automation (advanced)
+
+Flux can watch Docker Hub tags and patch manifests automatically using:
+
+- `ImageRepository`
+- `ImagePolicy`
+- `ImageUpdateAutomation`
+
+This removes manual manifest edits in CI and keeps deployment fully GitOps-managed.
+
+#### Rollback with Flux CD
+
+Preferred rollback is Git revert:
+
+~~~ bash
+git revert <bad-deploy-commit>
+git push origin main
+~~~
+
+Flux syncs the reverted manifest and rolls back cluster state.
+
+You can still use Kubernetes rollback commands when needed:
+
+~~~ bash
+kubectl rollout undo deployment/peer-study-app
+kubectl rollout status deployment/peer-study-app
+~~~
+
+### 10) Actual Workflows Added in This Repo
+
+- Workflow files: `.github/workflows/ci.yml` and `.github/workflows/cd.yml`
+- Image name used: `peer-study`
+- Kubernetes namespace used: `default`
+- Kubernetes deployment used: `peer-study-app`
+- Kubernetes container used: `peer-study-app`
+- Docker image tag version source: `pom.xml` -> `<version>` (example: `0.0.1-dev`)
+
+Required GitHub secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `KUBE_CONFIG_STAGING`
+- `KUBE_CONFIG_PRODUCTION`
+
+### 11) Branch Strategy Example (`main` for CI, `release/*` for CD)
+
+- `push` to `main` (including PR merge): runs `ci.yml`, executes tests, builds image, and pushes image.
+- `create` event for branch `release/*` (created from `main`): runs `cd.yml` and deploys that `pom.xml` image version.
+
+Flow summary:
+
+~~~ text
+Feature branch -> PR to main -> review and merge
+Merge/commit to main -> CI test + build + push image:<pom-version>
+Create release branch from main (release/*) -> CD deploy to cluster
+~~~
+
+### 12) CI Test Profile (No External DB Needed)
+
+To keep CI stable and avoid PostgreSQL dependency during tests:
+
+- Added `com.h2database:h2` as a test dependency in `pom.xml`.
+- Added `src/test/resources/application-test.yaml` with in-memory H2 datasource.
+- Added `@ActiveProfiles("test")` in `src/test/java/spring_boot/peer_prog/PeerProgApplicationTests.java`.
+- CI now runs `mvn -B test -Dspring.profiles.active=test` in `.github/workflows/cicd.yml`.
