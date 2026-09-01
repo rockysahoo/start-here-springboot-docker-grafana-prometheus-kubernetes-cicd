@@ -1,4 +1,4 @@
-name: CD
+name: CD - Build Pull Deploy K8
 
 on:
   create:
