@@ -1,9 +1,7 @@
-# Spring Boot App
+# Spring Boot App:
 
 
 ## Spring Boot Flow Diagram
-
----
 
 > - MyFirstController → MyFirstService → MyConstant(Insert and Fetch Data) - No Database Use Here.
 > - MyDataController → MyDataService → MyDataRepository → Database(Insert and Fetch Data).
