@@ -998,7 +998,6 @@ kubectl apply -f https://github.com/kubernetes/kube-state-metrics/releases/lates
 
 
 ### Send Grafana Alerts for any `Down Service`, `High CPU`, or `High Memory` usage'.
-
 ---
 
 
