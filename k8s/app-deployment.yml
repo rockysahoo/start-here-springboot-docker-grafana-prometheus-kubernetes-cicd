@@ -23,9 +23,10 @@ spec:
     spec:
       containers:
         - name: peer-study-app
-          #image: yourusername/peer-study:0.0.1-dev   # Replace with your Docker Hub image
-          image: peer-study:latest     # Local Build Image, <docker build -t peer-study:latest .>
-          imagePullPolicy: Never       # or [IfNotPresent, Always], for Remote pull
+          #image: yourusername/image:tag      # Replace with your Docker Hub image
+          image: rockysahoo/peer-study:0.0.1-dev
+          #image: peer-study:latest           # Local Build Image, <docker build -t peer-study:latest .>
+          imagePullPolicy: IfNotPresent       # or [IfNotPresent, Always, Never], for Remote pull
           ports:
             - containerPort: 8081   # Port the app listens on inside the container
           env:
