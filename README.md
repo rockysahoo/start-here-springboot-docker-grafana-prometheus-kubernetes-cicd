@@ -1057,6 +1057,9 @@ Use secrets in workflow via `${{ secrets.SECRET_NAME }}`.
 
 ### 5) Example GitHub Actions Workflow
 
+>> Not using this one, already added `ci.yml, cd.yml`.
+>> `ci.yml` has all the basic configuration to build the docker image and deploy to docker-hub on any commit/push to `main`.
+
 Create: `.github/workflows/cicd.yml`
 
 ~~~ yaml
