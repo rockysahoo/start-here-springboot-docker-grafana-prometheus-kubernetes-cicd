@@ -1,0 +1,183 @@
+# ============================================================
+# Secret - Database credentials
+# ============================================================
+# Values are base64 of "testuser" / "testpassword".
+# For real environments use a sealed-secret / external secret store.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: peer-study-db-credentials
+type: Opaque
+data:
+  username: dGVzdHVzZXI=      # testuser
+  password: dGVzdHBhc3N3b3Jk # testpassword
+---
+# ============================================================
+# ConfigMap - Non-sensitive app config & Environment variables
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: peer-study-config
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/peer_study_db
+  SPRING_PROFILES_ACTIVE: dev
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+  SERVER_SHUTDOWN: graceful
+---
+# ============================================================
+# Spring Boot Application - Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: peer-study-app
+  labels:
+    app: peer-study-app
+spec:
+  # replicas intentionally omitted - the HPA below owns this value.
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0   # keep full capacity during a rollout
+  selector:
+    matchLabels:
+      app: peer-study-app
+  template:
+    metadata:
+      labels:
+        app: peer-study-app
+    spec:
+      terminationGracePeriodSeconds: 45   # > Spring graceful shutdown window
+      containers:
+        - name: peer-study-app
+          image: rockysahoo/peer-study:0.0.1-dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: peer-study-config
+          env:
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: peer-study-db-credentials
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: peer-study-db-credentials
+                  key: password
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          # Startup: gives the JVM time to boot without a long
+          # initialDelaySeconds on the other two probes.
+          # 30 x 10s = up to 5 minutes before it gives up.
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+
+          # Readiness: is the Pod fit to receive traffic?
+          # On failure its IP is removed from the Service endpoints.
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # Liveness: is the process wedged?
+          # On failure kubelet restarts the container.
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+# ============================================================
+# Service - stable ClusterIP in front of the Pods
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: peer-study-service
+  labels:
+    app: peer-study-app
+spec:
+  type: ClusterIP        # switch to NodePort / LoadBalancer for external access
+  selector:
+    app: peer-study-app
+  ports:
+    - name: http
+      port: 80           # port on the Service
+      targetPort: http   # named container port -> 8081
+---
+# ============================================================
+# HorizontalPodAutoscaler
+# ============================================================
+# Requires metrics-server:
+#   kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: peer-study-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: peer-study-app
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300   # avoid flapping
+---
+# ============================================================
+# PodDisruptionBudget - protect availability during node drains
+# ============================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: peer-study-app-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: peer-study-app

@@ -2,8 +2,7 @@
 # Spring Boot Application - Kubernetes Deployment
 # ============================================================
 # Deploys the peer-study Spring Boot app as a Pod inside a ReplicaSet.
-# The Deployment controller ensures the desired number of replicas
-# are always running and handles rolling updates / rollbacks.
+# The Deployment controller ensures the desired number of replicas are always running and handles rolling updates / rollbacks.
 # ============================================================
 apiVersion: apps/v1
 kind: Deployment
