@@ -1,11 +1,9 @@
 # ============================================================
 # kube-state-metrics
-# ============================================================
-# Exposes metrics about Kubernetes objects (Deployments, Pods,
-# Services, Nodes, ...) on port 8080 at /metrics.
+# ============================================================ IMP:-
+# Exposes metrics about Kubernetes objects (Deployments, Pods,Services, Nodes, ...) on port 8080 at /metrics.
 #
-# Prometheus (k8s/prometheus-k8s.yml) scrapes it at:
-#   kube-state-metrics.kube-system.svc.cluster.local:8080
+# Prometheus (k8s/prometheus-k8s.yml) scrapes it at: kube-state-metrics.kube-system.svc.cluster.local:8080
 #
 # Apply with:
 #   kubectl apply -f k8s/kube-state-metrics.yml
