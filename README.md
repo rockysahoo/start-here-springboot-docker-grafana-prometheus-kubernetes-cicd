@@ -1314,3 +1314,31 @@ To keep CI stable and avoid PostgreSQL dependency during tests:
 - Added `src/test/resources/application-test.yaml` with in-memory H2 datasource.
 - Added `@ActiveProfiles("test")` in `src/test/java/spring_boot/peer_prog/PeerProgApplicationTests.java`.
 - CI now runs `mvn -B test -Dspring.profiles.active=test` in `.github/workflows/ci.yml`.
+
+### Helpful Tips
+
+#### port-forward
+- `port-forward` to service level is the best choice b/c the flows starts from service and reach to pods.
+
+~~~ text
+HTTPS/HTTP => Cluster (NGNIX/INGress Controller) => Service (Route the pods via app DNS) => Worker Node => Pods
+~~~
+- Doing with `pod`, we need to add pod name and it keeps change.
+
+~~~ bash
+kubectl port-forward -n <namespace> svc/service-name app_port_outside:service_port_tcp 
+kubectl port-forward -n default svc/peer-study-service 8080:80 # Expose the app to outside(localhost:8080)
+~~~
+
+#### Logs
+- Always check the `app logs` in the Service level OR Deployment level.
+- Check the logs `pod` level in case some issue with th pods.
+- Service level logs are the generic and it is generic.
+
+~~~ bash
+kubectl logs deployment/deployment-name -n <namespace>
+kubectl logs service/service-name -n <namespace>
+kubectl logs svc/service-name -n <namespace> -f
+
+kubectl logs pod-name -n <namespace>
+~~~
