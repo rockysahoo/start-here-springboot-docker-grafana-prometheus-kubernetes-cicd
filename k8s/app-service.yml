@@ -16,7 +16,7 @@ metadata:
 spec:
   type: NodePort          # Exposes the service on each Node's IP at a static port
   selector:
-    app: peer-study-app   # Matches the pods created by app-deployment.yml
+    app: peer-study-app   # Matches the pods created by app-deployment.yml (level define the name in deployment & selector catch/filter it)
   ports:
     - name: http
       protocol: TCP
