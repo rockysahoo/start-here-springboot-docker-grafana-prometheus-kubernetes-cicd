@@ -701,6 +701,11 @@ kubectl get service postgres-service
 
 **3. Deploy the Spring Boot Application**
 
+- We can directly create (kind of) the `pod` **But why need deployment**.
+- Every deployment there will be replicaset, this will control pods & recreate after deletion.
+- Exp: I've set `replica:4` means there will be 4 pods created, if I delete one pod, the replicaset will create a new pod to maintain the replica count.
+- We can't do this with``pod` directly, because pod is ephemeral, if we delete the pod, it will not be recreated automatically.
+
 ~~~ bash
 kubectl apply -f k8s/app-deployment.yml
 kubectl apply -f k8s/app-service.yml
