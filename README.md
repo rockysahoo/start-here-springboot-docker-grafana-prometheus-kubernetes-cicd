@@ -985,7 +985,13 @@ kubectl apply -f https://github.com/kubernetes/kube-state-metrics/releases/lates
 > - Kubernetes DNS is automatically configured — every Service gets a DNS entry. No need to hard-code IPs.
 > - The Prometheus ConfigMap (`k8s/prometheus-k8s.yml`) already contains the correct Kubernetes scrape configuration.
 
-
+### Kubernetes - Stateless Vs Stateful States
+- Stateless applications do not maintain any state between requests. Each request is independent and can be handled by any instance of the application. Examples include **web servers**, **API services** and **microservices**.
+- Stateful applications maintain state between requests. They require a **consistent identity** and **storage to function correctly**. Examples include **databases** and **messaging systems** like **Kafka**.
+- A stateless pod keeps no data that matters locally. Any replica can serve any request, and if a pod dies you lose nothing. Web frontends, REST APIs and most microservices fit here.
+- Stateless you can consider as normal application pods, that gets the request and pass it to others but don't store anything inside.
+- Stateful something, it needs to store the data and maintain the consistency, so it needs to have the persistent storage(each pod gets its own PersistentVolumeClaim) and identity(pod will have a valid name instead of random name).
+- Stateful pods are used for databases, message queues(Kafka), and other applications that require persistent storage and a stable network identity.
 
 ### Kubernetes Files Summary (`k8s/` folder)
 
